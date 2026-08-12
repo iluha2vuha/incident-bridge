@@ -1,4 +1,9 @@
-import type { LiveLobbySnapshot, LiveRoundSnapshot, LiveSessionState } from '../domain/model'
+import type {
+  LiveDebriefSnapshot,
+  LiveLobbySnapshot,
+  LiveRoundSnapshot,
+  LiveSessionState,
+} from '../domain/model'
 
 const API_BASE_URL = 'http://127.0.0.1:8000'
 
@@ -177,6 +182,26 @@ export async function advanceLiveRound(session: LiveSessionState): Promise<LiveR
     method: 'POST',
     body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
   })
+}
+
+export async function getLiveDebrief(session: LiveSessionState): Promise<LiveDebriefSnapshot> {
+  const url = new URL(`${API_BASE_URL}/api/sessions/${session.sessionId}/debrief`)
+
+  if (session.actor === 'facilitator' && session.facilitatorToken) {
+    url.searchParams.set('facilitator_token', session.facilitatorToken)
+  }
+
+  if (session.actor === 'participant' && session.participantToken) {
+    url.searchParams.set('participant_token', session.participantToken)
+  }
+
+  const response = await fetch(url.toString())
+
+  if (!response.ok) {
+    throw new Error(await errorMessage(response))
+  }
+
+  return (await response.json()) as LiveDebriefSnapshot
 }
 
 export function lobbyWebSocketUrl(

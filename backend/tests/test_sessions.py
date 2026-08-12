@@ -348,6 +348,44 @@ class SessionManagerTest(unittest.TestCase):
             if index < 2:
                 manager.advance_round(session.session_id, session.facilitator_token)
 
+    def test_debrief_shows_final_metrics_timeline_learning_and_questions(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [("Jordan", "hr"), ("Morgan", "it-helpdesk")],
+            mode="quick",
+        )
+
+        for index in range(3):
+            manager.open_round(session.session_id, session.facilitator_token)
+            submit_first_available_choices(manager, session, participants)
+            manager.lock_round(session.session_id, session.facilitator_token)
+            manager.reveal_round(session.session_id, session.facilitator_token)
+
+            if index < 2:
+                manager.advance_round(session.session_id, session.facilitator_token)
+
+        debrief = manager.debrief_for_token(
+            session.session_id,
+            facilitator_token=session.facilitator_token,
+        )
+
+        self.assertEqual(len(debrief.metrics), 4)
+        self.assertTrue(all(0 <= metric.value <= 100 for metric in debrief.metrics))
+        self.assertEqual(len(debrief.timeline), 3)
+        self.assertEqual(debrief.timeline[0].round_id, "r1-suspicious-payroll-request")
+        self.assertEqual(debrief.timeline[1].round_id, "r3-suspicious-mailbox-activity")
+        self.assertEqual(debrief.timeline[2].round_id, "r5-recovery-and-communication")
+        self.assertEqual(len(debrief.timeline[0].decisions), 2)
+        self.assertEqual(len(debrief.learning_points), 3)
+        self.assertGreaterEqual(len(debrief.discussion_questions), 6)
+
+        participant_debrief = manager.debrief_for_token(
+            session.session_id,
+            participant_token=participants[0].participant_token,
+        )
+        self.assertEqual(participant_debrief.timeline[0].round_id, debrief.timeline[0].round_id)
+
     def test_rejects_invalid_room_code(self) -> None:
         manager = SessionManager()
 

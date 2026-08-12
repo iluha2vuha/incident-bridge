@@ -16,6 +16,7 @@ import type {
   FacilitatorLobbyVariant,
   FacilitatorSnapshot,
   FinalMetric,
+  LiveDebriefSnapshot,
   LiveLobbySnapshot,
   LiveMetricDelta,
   LiveRoundSnapshot,
@@ -35,6 +36,7 @@ import {
   advanceLiveRound,
   closeLiveSession,
   createLiveSession,
+  getLiveDebrief,
   getLiveRound,
   joinLiveSession,
   lockLiveRound,
@@ -182,7 +184,12 @@ function PrototypeApp() {
             path="/participant/debrief"
             element={
               <ParticipantShell>
-                <ParticipantDebrief snapshot={state.participantSnapshot} />
+                <ParticipantDebrief
+                  snapshot={state.participantSnapshot}
+                  liveSession={state.liveSession}
+                  liveDebrief={state.liveDebrief}
+                  setLiveDebrief={state.setLiveDebrief}
+                />
               </ParticipantShell>
             }
           />
@@ -270,7 +277,12 @@ function PrototypeApp() {
             path="/facilitator/debrief"
             element={
               <FacilitatorShell>
-                <FacilitatorDebrief snapshot={state.facilitatorSnapshot} />
+                <FacilitatorDebrief
+                  snapshot={state.facilitatorSnapshot}
+                  liveSession={state.liveSession}
+                  liveDebrief={state.liveDebrief}
+                  setLiveDebrief={state.setLiveDebrief}
+                />
               </FacilitatorShell>
             }
           />
@@ -1177,7 +1189,45 @@ function ParticipantResult({
   )
 }
 
-function ParticipantDebrief({ snapshot }: { snapshot: ParticipantSnapshot }) {
+function ParticipantDebrief({
+  snapshot,
+  liveSession,
+  liveDebrief,
+  setLiveDebrief,
+}: {
+  snapshot: ParticipantSnapshot
+  liveSession: LiveSessionState | null
+  liveDebrief: LiveDebriefSnapshot | null
+  setLiveDebrief: (debrief: LiveDebriefSnapshot | null) => void
+}) {
+  useEffect(() => {
+    if (liveSession?.actor !== 'participant') {
+      return
+    }
+
+    getLiveDebrief(liveSession)
+      .then(setLiveDebrief)
+      .catch(() => undefined)
+  }, [liveSession, setLiveDebrief])
+
+  if (liveSession?.actor === 'participant' && liveDebrief) {
+    return (
+      <section className="screenStack">
+        <p className="eyebrow">Final organisational outcome</p>
+        <h1>Final debrief</h1>
+        <FinalMetricGrid metrics={liveFinalMetrics(liveDebrief)} compact />
+        <TimelineList items={liveTimelineItems(liveDebrief).slice(0, 3)} compact />
+        <section className="debriefPanel" aria-labelledby="participant-discussion">
+          <h2 id="participant-discussion">Discussion prompts</h2>
+          <DebriefQuestionList questions={liveDebrief.discussion_questions.slice(0, 3)} />
+        </section>
+        <Notice tone="neutral">
+          Results are organisational learning signals, not individual scores.
+        </Notice>
+      </section>
+    )
+  }
+
   return (
     <section className="screenStack">
       <p className="eyebrow">Final organisational outcome</p>
@@ -1733,7 +1783,61 @@ function FacilitatorResult({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   )
 }
 
-function FacilitatorDebrief({ snapshot }: { snapshot: FacilitatorSnapshot }) {
+function FacilitatorDebrief({
+  snapshot,
+  liveSession,
+  liveDebrief,
+  setLiveDebrief,
+}: {
+  snapshot: FacilitatorSnapshot
+  liveSession: LiveSessionState | null
+  liveDebrief: LiveDebriefSnapshot | null
+  setLiveDebrief: (debrief: LiveDebriefSnapshot | null) => void
+}) {
+  useEffect(() => {
+    if (liveSession?.actor !== 'facilitator') {
+      return
+    }
+
+    getLiveDebrief(liveSession)
+      .then(setLiveDebrief)
+      .catch(() => undefined)
+  }, [liveSession, setLiveDebrief])
+
+  if (liveSession?.actor === 'facilitator' && liveDebrief) {
+    return (
+      <section className="facilitatorStack">
+        <div className="roundControlHeader">
+          <div>
+            <p className="eyebrow">Completed session</p>
+            <h1>Final debrief</h1>
+            <p className="muted">
+              {liveDebrief.scenario_title}, {liveDebrief.mode} mode.
+            </p>
+          </div>
+          <button type="button" className="primaryButton desktopAction">
+            End session
+          </button>
+        </div>
+        <FinalMetricGrid metrics={liveFinalMetrics(liveDebrief)} />
+        <div className="debriefGrid">
+          <section className="panel">
+            <h2>Decision timeline</h2>
+            <TimelineList items={liveTimelineItems(liveDebrief)} />
+          </section>
+          <section className="panel">
+            <h2>Learning points</h2>
+            <LearningPointList points={liveDebrief.learning_points} />
+          </section>
+          <section className="panel debriefQuestionsPanel">
+            <h2>Discussion questions</h2>
+            <DebriefQuestionList questions={liveDebrief.discussion_questions} />
+          </section>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="facilitatorStack">
       <div className="roundControlHeader">
@@ -1806,6 +1910,30 @@ function TimelineList({ items, compact = false }: { items: TimelineItem[]; compa
       ))}
     </ol>
   )
+}
+
+function liveFinalMetrics(debrief: LiveDebriefSnapshot): FinalMetric[] {
+  return debrief.metrics.map((metric) => ({
+    label: metric.name,
+    value: metric.value,
+    trend: metric.trend,
+  }))
+}
+
+function liveTimelineItems(debrief: LiveDebriefSnapshot): TimelineItem[] {
+  return debrief.timeline.map((entry) => {
+    const decisions = Object.fromEntries(
+      entry.decisions.map((decision) => [decision.role_id, decision.choice_label]),
+    )
+
+    return {
+      round: entry.round_number,
+      title: entry.title,
+      hrDecision: decisions.hr ?? 'No HR decision recorded.',
+      itDecision: decisions['it-helpdesk'] ?? 'No IT Helpdesk decision recorded.',
+      outcome: entry.learning_point,
+    }
+  })
 }
 
 function LearningPointList({ points }: { points: string[] }) {

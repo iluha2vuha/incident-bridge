@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { LiveLobbySnapshot, LiveRoundSnapshot } from '../domain/model'
+import type { LiveDebriefSnapshot, LiveLobbySnapshot, LiveRoundSnapshot } from '../domain/model'
 import {
   advanceLiveRound,
   createLiveSession,
+  getLiveDebrief,
   getLiveRound,
   joinLiveSession,
   lockLiveRound,
@@ -62,6 +63,32 @@ const round: LiveRoundSnapshot = {
   vote_progress: [{ role_id: 'hr', role_name: 'HR', submitted: 0, expected: 1 }],
   facilitator_note: null,
   result: null,
+}
+
+const debrief: LiveDebriefSnapshot = {
+  session_id: 'session-1',
+  scenario_title: 'The Friday Pay Run',
+  mode: 'standard',
+  metrics: [{ id: 'incident_control', name: 'Incident Control', value: 72, trend: 'strong' }],
+  timeline: [
+    {
+      round_number: 1,
+      round_id: 'r1-suspicious-payroll-request',
+      title: 'The Suspicious Payroll Request',
+      decisions: [
+        {
+          role_id: 'hr',
+          role_name: 'HR',
+          choice_id: 'hr-r1-secure-contact-escalate',
+          choice_label: 'Escalate securely.',
+        },
+      ],
+      outcome: 'The report is now being treated as suspicious.',
+      learning_point: 'A business request and a technical event can be parts of one incident.',
+    },
+  ],
+  learning_points: ['A business request and a technical event can be parts of one incident.'],
+  discussion_questions: ['Which role had information the other role needed?'],
 }
 
 describe('live session API helpers', () => {
@@ -284,6 +311,23 @@ describe('live session API helpers', () => {
       3,
       'http://127.0.0.1:8000/api/sessions/session-1/round/advance',
       expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('fetches a facilitator debrief snapshot', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(debrief))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getLiveDebrief({
+      actor: 'facilitator',
+      sessionId: 'session-1',
+      roomCode: 'AB7K2P',
+      facilitatorToken: 'facilitator-secret',
+      lobby,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/debrief?facilitator_token=facilitator-secret',
     )
   })
 })

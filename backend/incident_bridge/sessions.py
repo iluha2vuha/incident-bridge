@@ -41,6 +41,16 @@ class SessionRole:
     briefing: str
 
 
+@dataclass(frozen=True)
+class TimelineEntry:
+    round_number: int
+    round_id: str
+    title: str
+    decisions: dict[str, str]
+    outcome: str
+    learning_point: str
+
+
 class SessionErrorCode(str, Enum):
     INVALID_ROOM_CODE = "invalid_room_code"
     CLOSED_ROOM = "closed_room"
@@ -190,6 +200,13 @@ class MetricDeltaView(BaseModel):
     value: int
 
 
+class FinalMetricView(BaseModel):
+    id: str
+    name: str
+    value: int
+    trend: Literal["strong", "steady", "strained"]
+
+
 class RoundResultView(BaseModel):
     public_consequence: str
     interaction_summaries: list[str]
@@ -219,6 +236,25 @@ class RoundSnapshot(BaseModel):
     vote_progress: list[VoteProgressView] = Field(default_factory=list)
     facilitator_note: Optional[str] = None
     result: Optional[RoundResultView] = None
+
+
+class TimelineEntryView(BaseModel):
+    round_number: int
+    round_id: str
+    title: str
+    decisions: list[RoundResultChoiceView]
+    outcome: str
+    learning_point: str
+
+
+class DebriefSnapshot(BaseModel):
+    session_id: str
+    scenario_title: str
+    mode: Literal["quick", "standard"]
+    metrics: list[FinalMetricView]
+    timeline: list[TimelineEntryView]
+    learning_points: list[str]
+    discussion_questions: list[str]
 
 
 @dataclass
@@ -262,6 +298,7 @@ class GameSession:
     round_result: Optional[RoundResult] = None
     flags: set[str] = field(default_factory=set)
     metric_values: dict[str, int] = field(default_factory=dict)
+    timeline: list[TimelineEntry] = field(default_factory=list)
 
     def snapshot(self) -> LobbySnapshot:
         role_counts = self.role_counts()
@@ -605,6 +642,7 @@ class SessionManager:
 
         session.metric_values = session.round_result.metric_values
         session.flags = session.round_result.flags
+        self._record_timeline_entry(session, round_)
         self._transition_session(session, "round_locked")
 
         return self._round_snapshot(session, round_, None)
@@ -625,6 +663,19 @@ class SessionManager:
 
         self._transition_session(session, "consequence_revealed")
         return self._round_snapshot(session, self._current_round(session), None)
+
+    def debrief_for_token(
+        self,
+        session_id: str,
+        *,
+        facilitator_token: Optional[str] = None,
+        participant_token: Optional[str] = None,
+    ) -> DebriefSnapshot:
+        session = self._session(session_id)
+        self._ensure_not_expired(session)
+        self._ensure_actor(session, facilitator_token, participant_token)
+
+        return self._debrief_snapshot(session)
 
     def advance_round(self, session_id: str, facilitator_token: str) -> RoundSnapshot:
         session = self._session(session_id)
@@ -791,6 +842,99 @@ class SessionManager:
             learning_point=round_.learning_point,
         )
 
+    def _record_timeline_entry(self, session: GameSession, round_: ScenarioRound) -> None:
+        if session.round_result is None:
+            return
+
+        round_ids = self._round_ids(session)
+
+        session.timeline = [
+            entry for entry in session.timeline if entry.round_id != round_.id
+        ]
+        session.timeline.append(
+            TimelineEntry(
+                round_number=round_ids.index(round_.id) + 1,
+                round_id=round_.id,
+                title=round_.title,
+                decisions={
+                    role_id: decision.choice_id
+                    for role_id, decision in session.round_result.decisions.items()
+                },
+                outcome=round_.public_consequence,
+                learning_point=round_.learning_point,
+            )
+        )
+
+    def _debrief_snapshot(self, session: GameSession) -> DebriefSnapshot:
+        return DebriefSnapshot(
+            session_id=session.id,
+            scenario_title=session.scenario.title,
+            mode=session.mode,
+            metrics=[
+                FinalMetricView(
+                    id=metric.id,
+                    name=metric.name,
+                    value=session.metric_values.get(metric.id, metric.initial_value),
+                    trend=self._metric_trend(
+                        session.metric_values.get(metric.id, metric.initial_value),
+                    ),
+                )
+                for metric in session.scenario.metrics
+            ],
+            timeline=[
+                TimelineEntryView(
+                    round_number=entry.round_number,
+                    round_id=entry.round_id,
+                    title=entry.title,
+                    decisions=self._timeline_decisions(session, entry),
+                    outcome=entry.outcome,
+                    learning_point=entry.learning_point,
+                )
+                for entry in sorted(session.timeline, key=lambda item: item.round_number)
+            ],
+            learning_points=[
+                self._round_by_id(session, round_id).learning_point
+                for round_id in self._round_ids(session)
+            ],
+            discussion_questions=[
+                question
+                for round_id in self._round_ids(session)
+                for question in self._round_by_id(session, round_id).discussion_questions
+            ]
+            + session.scenario.final_debrief,
+        )
+
+    def _timeline_decisions(
+        self,
+        session: GameSession,
+        entry: TimelineEntry,
+    ) -> list[RoundResultChoiceView]:
+        round_ = self._round_by_id(session, entry.round_id)
+        decisions = []
+
+        for role in session.roles:
+            choice_id = entry.decisions[role.id]
+            choice = choice_for_role(round_, role.id, choice_id)
+            decisions.append(
+                RoundResultChoiceView(
+                    role_id=role.id,
+                    role_name=role.name,
+                    choice_id=choice.id,
+                    choice_label=choice.label,
+                )
+            )
+
+        return decisions
+
+    def _metric_trend(self, value: int) -> Literal["strong", "steady", "strained"]:
+        if value >= 70:
+            return "strong"
+
+        if value >= 45:
+            return "steady"
+
+        return "strained"
+
     def _round_ids(self, session: GameSession) -> list[str]:
         mode = (
             session.scenario.modes.quick
@@ -803,8 +947,11 @@ class SessionManager:
         if session.current_round_id is None:
             raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not open.", 404)
 
+        return self._round_by_id(session, session.current_round_id)
+
+    def _round_by_id(self, session: GameSession, round_id: str) -> ScenarioRound:
         for round_ in session.scenario.rounds:
-            if round_.id == session.current_round_id:
+            if round_.id == round_id:
                 return round_
 
         raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not available.", 404)

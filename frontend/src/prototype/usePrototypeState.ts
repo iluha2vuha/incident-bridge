@@ -3,6 +3,7 @@ import type {
   ChoiceStep,
   ConnectionState,
   FacilitatorLobbyVariant,
+  LiveDebriefSnapshot,
   LiveLobbySnapshot,
   LiveRoundSnapshot,
   LiveSessionState,
@@ -21,6 +22,7 @@ export function usePrototypeState() {
   const [voteVariant, setVoteVariant] = useState<VoteVariant>('open')
   const [liveSession, setLiveSession] = useState<LiveSessionState | null>(null)
   const [liveRound, setLiveRound] = useState<LiveRoundSnapshot | null>(null)
+  const [liveDebrief, setLiveDebrief] = useState<LiveDebriefSnapshot | null>(null)
 
   const roleContent = roles[role]
   const selectedChoice = roleContent.choices.find((choice) => choice.id === selectedChoiceId)
@@ -55,6 +57,8 @@ export function usePrototypeState() {
     updateLiveLobby,
     liveRound,
     setLiveRound,
+    liveDebrief,
+    setLiveDebrief,
     participantSnapshot,
     facilitatorSnapshot,
   }

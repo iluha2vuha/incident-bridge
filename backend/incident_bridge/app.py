@@ -15,6 +15,7 @@ from incident_bridge.sessions import (
     CloseSessionRequest,
     CreateSessionRequest,
     CreateSessionResponse,
+    DebriefSnapshot,
     FacilitatorTokenRequest,
     JoinSessionRequest,
     JoinSessionResponse,
@@ -241,6 +242,18 @@ def create_app(
         lobby = manager.lobby_for_token(session_id, facilitator_token=request.facilitator_token)
         await hub.broadcast(lobby)
         return snapshot
+
+    @app.get("/api/sessions/{session_id}/debrief", response_model=DebriefSnapshot)
+    async def get_debrief(
+        session_id: str,
+        facilitator_token: Optional[str] = None,
+        participant_token: Optional[str] = None,
+    ) -> DebriefSnapshot:
+        return manager.debrief_for_token(
+            session_id,
+            facilitator_token=facilitator_token,
+            participant_token=participant_token,
+        )
 
     @app.websocket("/ws/sessions/{session_id}/lobby")
     async def lobby_websocket(

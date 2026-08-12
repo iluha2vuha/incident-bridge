@@ -79,9 +79,9 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 11 - Debrief
 
-- [ ] Show final metrics.
-- [ ] Show decision timeline.
-- [ ] Show discussion questions and learning points.
+- [x] Show final metrics.
+- [x] Show decision timeline.
+- [x] Show discussion questions and learning points.
 
 ## Phase 12 - Reconnection / Error Handling
 

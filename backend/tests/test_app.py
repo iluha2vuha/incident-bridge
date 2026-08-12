@@ -185,6 +185,18 @@ class AppTest(unittest.TestCase):
         self.assertEqual(advanced["round_id"], "r2-repeated-authentication-prompts")
         self.assertEqual(advanced["round_number"], 2)
 
+        debrief_response = self.client.get(
+            f"/api/sessions/{created['session_id']}/debrief",
+            params={"facilitator_token": created["facilitator_token"]},
+        )
+
+        self.assertEqual(debrief_response.status_code, 200)
+        debrief = debrief_response.json()
+        self.assertEqual(len(debrief["metrics"]), 4)
+        self.assertEqual(len(debrief["timeline"]), 1)
+        self.assertGreaterEqual(len(debrief["learning_points"]), 5)
+        self.assertGreaterEqual(len(debrief["discussion_questions"]), 10)
+
     def test_join_reports_controlled_errors(self) -> None:
         invalid_room = self.client.post(
             "/api/sessions/join",

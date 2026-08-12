@@ -251,6 +251,32 @@ export type LiveRoundResult = {
   learning_point: string
 }
 
+export type LiveFinalMetric = {
+  id: string
+  name: string
+  value: number
+  trend: 'strong' | 'steady' | 'strained'
+}
+
+export type LiveTimelineEntry = {
+  round_number: number
+  round_id: string
+  title: string
+  decisions: LiveRoundDecision[]
+  outcome: string
+  learning_point: string
+}
+
+export type LiveDebriefSnapshot = {
+  session_id: string
+  scenario_title: string
+  mode: 'quick' | 'standard'
+  metrics: LiveFinalMetric[]
+  timeline: LiveTimelineEntry[]
+  learning_points: string[]
+  discussion_questions: string[]
+}
+
 export type LiveRoundSnapshot = {
   session_id: string
   phase: LiveSessionPhase
