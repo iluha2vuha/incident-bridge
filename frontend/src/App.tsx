@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import {
   BrowserRouter,
   Link,
@@ -8,138 +8,20 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom'
+import type {
+  Choice,
+  ChoiceStep,
+  ConnectionState,
+  FacilitatorLobbyVariant,
+  RoleId,
+  VoteVariant,
+} from './domain/model'
+import { metricDeltas, reviewNavGroups, roles, scenario } from './mocks/scenario'
+import { fakeParticipants, lobbySnapshots, mockSession, voteSnapshots } from './mocks/session'
+import { usePrototypeState } from './prototype/usePrototypeState'
 import './App.css'
 
-type RoleId = 'hr' | 'it-helpdesk'
-type ConnectionState = 'connected' | 'disconnected' | 'reconnecting'
-type ChoiceStep = 'choice' | 'confirm' | 'submitted' | 'waiting'
-type FacilitatorLobbyVariant = 'ready' | 'emptyRole' | 'imbalance'
-type VoteVariant = 'open' | 'arriving' | 'complete' | 'missing'
-
-type Choice = {
-  id: string
-  label: string
-}
-
-type RoleContent = {
-  role: RoleId
-  label: string
-  shortLabel: string
-  briefing: string
-  privateInfo: string
-  choices: Choice[]
-}
-
-const roles: Record<RoleId, RoleContent> = {
-  hr: {
-    role: 'hr',
-    label: 'HR',
-    shortLabel: 'HR',
-    briefing:
-      'Protect employee information, keep payroll moving, support employee trust, verify sensitive requests, and escalate appropriately.',
-    privateInfo:
-      'The sender display name looks like a senior HR employee. The message requests personal and bank information. The employee is worried their salary may be delayed.',
-    choices: [
-      {
-        id: 'hr-r1-reply-for-context',
-        label:
-          'Ask the employee to reply asking what details are needed, while HR checks payroll records.',
-      },
-      {
-        id: 'hr-r1-secure-contact-escalate',
-        label:
-          'Contact the employee through a trusted channel, preserve the message, and escalate the concern.',
-      },
-      {
-        id: 'hr-r1-watch-for-pattern',
-        label:
-          'Hold the request until another report confirms whether this is isolated.',
-      },
-      {
-        id: 'hr-r1-broad-warning',
-        label:
-          'Send a quick all-staff warning that payroll messages may be suspicious.',
-      },
-    ],
-  },
-  'it-helpdesk': {
-    role: 'it-helpdesk',
-    label: 'IT Helpdesk',
-    shortLabel: 'IT',
-    briefing:
-      'Verify identity, secure accounts, preserve evidence, contain compromise, investigate wider impact, and avoid unnecessary disruption.',
-    privateInfo:
-      'A password reset was requested for the employee earlier this morning from an unfamiliar browser. No incident has been formally reported. The account remains active.',
-    choices: [
-      {
-        id: 'it-r1-reset-now',
-        label: 'Reset the password immediately and ask the employee to sign in again.',
-      },
-      {
-        id: 'it-r1-verify-and-review',
-        label:
-          'Verify the employee through an approved channel and review recent account activity.',
-      },
-      {
-        id: 'it-r1-wait-confirmation',
-        label:
-          'Wait for HR or the employee to confirm compromise before intervening.',
-      },
-      {
-        id: 'it-r1-service-ticket-only',
-        label:
-          'Log it as a routine password-reset ticket and continue normal queue handling.',
-      },
-    ],
-  },
-}
-
-const round = {
-  number: 1,
-  total: 5,
-  title: 'The Suspicious Payroll Request',
-  shared:
-    "An employee reports an urgent message asking them to confirm payroll information before today's pay run.",
-  consequence:
-    "The report is now being treated as suspicious. The quality of the next step depends on whether HR and Helpdesk combine the employee's concern with the account activity.",
-  learning: 'A business request and a technical event can be parts of one incident.',
-}
-
-const fakeParticipants = [
-  { name: 'Jordan P.', role: 'HR', status: 'connected' },
-  { name: 'Morgan T.', role: 'HR', status: 'connected' },
-  { name: 'Priya S.', role: 'HR', status: 'connected' },
-  { name: 'Sam R.', role: 'IT Helpdesk', status: 'connected' },
-  { name: 'Alex K.', role: 'IT Helpdesk', status: 'connected' },
-  { name: 'Chen W.', role: 'IT Helpdesk', status: 'connected' },
-]
-
-const navGroups = [
-  {
-    title: 'Participant',
-    links: [
-      ['/participant/join', 'Join'],
-      ['/participant/role', 'Role'],
-      ['/participant/lobby', 'Lobby'],
-      ['/participant/briefing', 'Briefing'],
-      ['/participant/round', 'Round'],
-      ['/participant/waiting', 'Waiting'],
-      ['/participant/result', 'Result'],
-      ['/participant/disconnected', 'Disconnected'],
-      ['/participant/reconnecting', 'Reconnecting'],
-    ],
-  },
-  {
-    title: 'Facilitator',
-    links: [
-      ['/facilitator/create', 'Create'],
-      ['/facilitator/lobby', 'Lobby'],
-      ['/facilitator/round', 'Round control'],
-      ['/facilitator/lock', 'Lock'],
-      ['/facilitator/result', 'Reveal'],
-    ],
-  },
-]
+const round = scenario.round
 
 function App() {
   return (
@@ -150,33 +32,7 @@ function App() {
 }
 
 function PrototypeApp() {
-  const [role, setRole] = useState<RoleId>('hr')
-  const [selectedChoiceId, setSelectedChoiceId] = useState<string>('')
-  const [choiceStep, setChoiceStep] = useState<ChoiceStep>('choice')
-  const [connection, setConnection] = useState<ConnectionState>('connected')
-  const [lobbyVariant, setLobbyVariant] = useState<FacilitatorLobbyVariant>('ready')
-  const [voteVariant, setVoteVariant] = useState<VoteVariant>('open')
-
-  const roleContent = roles[role]
-  const selectedChoice = roleContent.choices.find(
-    (choice) => choice.id === selectedChoiceId,
-  )
-
-  const state = {
-    role,
-    setRole,
-    selectedChoiceId,
-    setSelectedChoiceId,
-    selectedChoice,
-    choiceStep,
-    setChoiceStep,
-    connection,
-    setConnection,
-    lobbyVariant,
-    setLobbyVariant,
-    voteVariant,
-    setVoteVariant,
-  }
+  const state = usePrototypeState()
 
   return (
     <div className="app">
@@ -186,17 +42,17 @@ function PrototypeApp() {
           <Route path="/" element={<Navigate to="/review" replace />} />
           <Route path="/review" element={<ReviewIndex {...state} />} />
           <Route path="/participant/join" element={<ParticipantShell><JoinScreen /></ParticipantShell>} />
-          <Route path="/participant/role" element={<ParticipantShell><RoleSelection role={role} setRole={setRole} /></ParticipantShell>} />
-          <Route path="/participant/lobby" element={<ParticipantShell><ParticipantLobby role={role} connection={connection} /></ParticipantShell>} />
-          <Route path="/participant/briefing" element={<ParticipantShell><RoleBriefing role={role} /></ParticipantShell>} />
+          <Route path="/participant/role" element={<ParticipantShell><RoleSelection role={state.role} setRole={state.setRole} /></ParticipantShell>} />
+          <Route path="/participant/lobby" element={<ParticipantShell><ParticipantLobby role={state.role} connection={state.connection} /></ParticipantShell>} />
+          <Route path="/participant/briefing" element={<ParticipantShell><RoleBriefing role={state.role} /></ParticipantShell>} />
           <Route path="/participant/round" element={<ParticipantShell><RoundWorkspace {...state} mode="decision" /></ParticipantShell>} />
           <Route path="/participant/waiting" element={<ParticipantShell><RoundWorkspace {...state} mode="waiting" /></ParticipantShell>} />
-          <Route path="/participant/result" element={<ParticipantShell><ParticipantResult role={role} /></ParticipantShell>} />
-          <Route path="/participant/disconnected" element={<ParticipantShell><ConnectionExample state="disconnected" selectedChoice={selectedChoice} /></ParticipantShell>} />
-          <Route path="/participant/reconnecting" element={<ParticipantShell><ConnectionExample state="reconnecting" selectedChoice={selectedChoice} /></ParticipantShell>} />
+          <Route path="/participant/result" element={<ParticipantShell><ParticipantResult role={state.role} /></ParticipantShell>} />
+          <Route path="/participant/disconnected" element={<ParticipantShell><ConnectionExample state="disconnected" selectedChoice={state.selectedChoice} /></ParticipantShell>} />
+          <Route path="/participant/reconnecting" element={<ParticipantShell><ConnectionExample state="reconnecting" selectedChoice={state.selectedChoice} /></ParticipantShell>} />
           <Route path="/facilitator/create" element={<FacilitatorShell><CreateSession /></FacilitatorShell>} />
-          <Route path="/facilitator/lobby" element={<FacilitatorShell><FacilitatorLobby variant={lobbyVariant} setVariant={setLobbyVariant} /></FacilitatorShell>} />
-          <Route path="/facilitator/round" element={<FacilitatorShell><LiveRoundControl variant={voteVariant} setVariant={setVoteVariant} /></FacilitatorShell>} />
+          <Route path="/facilitator/lobby" element={<FacilitatorShell><FacilitatorLobby variant={state.lobbyVariant} setVariant={state.setLobbyVariant} /></FacilitatorShell>} />
+          <Route path="/facilitator/round" element={<FacilitatorShell><LiveRoundControl variant={state.voteVariant} setVariant={state.setVoteVariant} /></FacilitatorShell>} />
           <Route path="/facilitator/lock" element={<FacilitatorShell><LockRoundConfirmation /></FacilitatorShell>} />
           <Route path="/facilitator/result" element={<FacilitatorShell><FacilitatorResult /></FacilitatorShell>} />
         </Routes>
@@ -270,7 +126,7 @@ function ReviewIndex({
       </div>
 
       <div className="reviewGrid">
-        {navGroups.map((group) => (
+        {reviewNavGroups.map((group) => (
           <section className="panel" key={group.title} aria-labelledby={`${group.title}-nav`}>
             <h2 id={`${group.title}-nav`}>{group.title}</h2>
             <div className="linkGrid">
@@ -432,9 +288,9 @@ function JoinScreen() {
         <p className="muted">A short incident-response exercise. No account needed.</p>
       </div>
       <label className="fieldLabel" htmlFor="room-code">Room code</label>
-      <input id="room-code" value="AB7K2P" readOnly className="codeInput" />
+      <input id="room-code" value={mockSession.roomCode} readOnly className="codeInput" />
       <label className="fieldLabel" htmlFor="nickname">Temporary nickname</label>
-      <input id="nickname" value="Jordan" readOnly />
+      <input id="nickname" value={mockSession.participantName} readOnly />
       <Link className="primaryButton" to="/participant/role">
         Join room
       </Link>
@@ -504,8 +360,8 @@ function ParticipantLobby({
       <StatusLine state={connection} />
       <div>
         <p className="eyebrow">Room</p>
-        <h1 className="roomCode">AB7K2P</h1>
-        <p className="muted">Jordan, you are {roles[role].label}</p>
+        <h1 className="roomCode">{mockSession.roomCode}</h1>
+        <p className="muted">{mockSession.participantName}, you are {roles[role].label}</p>
       </div>
       <CountGrid />
       <Notice tone="neutral">Waiting for the facilitator to start the exercise.</Notice>
@@ -723,7 +579,7 @@ function CreateSession() {
         </section>
         <section className="panel">
           <h2>Scenario</h2>
-          <p>The Friday Pay Run</p>
+          <p>{scenario.title}</p>
         </section>
       </div>
       <Link className="primaryButton desktopAction" to="/facilitator/lobby">
@@ -740,27 +596,16 @@ function FacilitatorLobby({
   variant: FacilitatorLobbyVariant
   setVariant: (variant: FacilitatorLobbyVariant) => void
 }) {
-  const counts = useMemo(() => {
-    if (variant === 'emptyRole') return { total: 4, hr: 4, it: 0 }
-    if (variant === 'imbalance') return { total: 5, hr: 4, it: 1 }
-    return { total: 6, hr: 3, it: 3 }
-  }, [variant])
-
-  const warning =
-    variant === 'emptyRole'
-      ? 'IT Helpdesk has no participants.'
-      : variant === 'imbalance'
-        ? 'Role imbalance: HR 4, IT Helpdesk 1.'
-        : ''
+  const lobby = lobbySnapshots[variant]
 
   return (
     <section className="facilitatorStack">
       <div className="facilitatorLobby">
         <section className="roomPanel" aria-labelledby="room-code">
           <p className="eyebrow">Room code</p>
-          <h1 id="room-code" className="roomCode">AB7K2P</h1>
+          <h1 id="room-code" className="roomCode">{mockSession.roomCode}</h1>
           <div className="qrPlaceholder" aria-label="QR code placeholder" />
-          <p className="muted">incident-bridge.example/join</p>
+          <p className="muted">{mockSession.joinUrl}</p>
         </section>
         <section className="participantsPanel">
           <div className="variantRow">
@@ -774,8 +619,8 @@ function FacilitatorLobby({
               onChange={(value) => setVariant(value as FacilitatorLobbyVariant)}
             />
           </div>
-          <RoleCountCards total={counts.total} hr={counts.hr} it={counts.it} />
-          {warning ? <Notice tone="warning" live>{warning}</Notice> : null}
+          <RoleCountCards total={lobby.total} hr={lobby.hr} it={lobby.it} />
+          {lobby.warning ? <Notice tone="warning" live>{lobby.warning}</Notice> : null}
           <ParticipantList />
           <div className="buttonRow">
             <button type="button" className="secondaryButton">End session</button>
@@ -794,12 +639,7 @@ function LiveRoundControl({
   variant: VoteVariant
   setVariant: (variant: VoteVariant) => void
 }) {
-  const votes = {
-    open: { hr: '0/3', it: '0/3', warning: '' },
-    arriving: { hr: '2/3', it: '1/3', warning: 'Missing: Morgan, Sam, Alex.' },
-    complete: { hr: '3/3', it: '3/3', warning: '' },
-    missing: { hr: '3/3', it: '1/3', warning: 'Two IT Helpdesk participants have not voted.' },
-  }[variant]
+  const votes = voteSnapshots[variant]
 
   return (
     <section className="facilitatorStack">
@@ -889,6 +729,8 @@ function FacilitatorResult() {
 }
 
 function EmailArtifact() {
+  const email = scenario.artifacts.hrEmail
+
   return (
     <article className="artifact emailArtifact" aria-labelledby="email-subject">
       <p className="artifactLabel">Simulated training artifact - email</p>
@@ -897,43 +739,36 @@ function EmailArtifact() {
         <span aria-hidden="true">Reply / Forward / More</span>
       </div>
       <div className="emailSender">
-        <div className="avatar" aria-hidden="true">MC</div>
+        <div className="avatar" aria-hidden="true">{email.senderInitials}</div>
         <div>
-          <strong>Maya Chen - People Operations</strong>
-          <p>To: Jordan Patel. Today, 09:07</p>
+          <strong>{email.senderName}</strong>
+          <p>{email.recipientLine}</p>
         </div>
       </div>
-      <Notice tone="incident">This message was sent from an address outside the organisation.</Notice>
-      <h2 id="email-subject">Action required before today's pay run</h2>
-      <p>
-        Hi Jordan, we are finalising this cycle's run and your record needs a
-        quick confirmation of bank and ID details before 11am today. Reply with
-        the attached form completed so payroll is not delayed.
-      </p>
+      <Notice tone="incident">{email.externalSenderNotice}</Notice>
+      <h2 id="email-subject">{email.subject}</h2>
+      <p>{email.body}</p>
     </article>
   )
 }
 
 function TicketArtifact() {
+  const ticket = scenario.artifacts.itTicket
+
   return (
     <article className="artifact ticketArtifact" aria-labelledby="ticket-title">
       <p className="artifactLabel">Simulated training artifact - BridgeDesk ticket</p>
       <div className="ticketHeader">
-        <span className="mono">INC-10427</span>
-        <span className="statusPill">New</span>
+        <span className="mono">{ticket.id}</span>
+        <span className="statusPill">{ticket.status}</span>
       </div>
-      <h2 id="ticket-title">Password reset requested from unrecognised browser</h2>
+      <h2 id="ticket-title">{ticket.title}</h2>
       <dl>
-        <div><dt>Priority</dt><dd>Medium</dd></div>
-        <div><dt>Category</dt><dd>Account and authentication</dd></div>
-        <div><dt>Reporter</dt><dd>Jordan Patel</dd></div>
-        <div><dt>Created</dt><dd>08:54</dd></div>
+        {ticket.fields.map((field) => (
+          <div key={field.label}><dt>{field.label}</dt><dd>{field.value}</dd></div>
+        ))}
       </dl>
-      <p>
-        A password reset was requested this morning from a browser not previously
-        seen on this account. No incident has been formally reported. The account
-        remains active.
-      </p>
+      <p>{ticket.description}</p>
     </article>
   )
 }
@@ -989,11 +824,13 @@ function RoleBadge({ role, privacy }: { role: RoleId; privacy: string }) {
 }
 
 function CountGrid() {
+  const lobby = lobbySnapshots.ready
+
   return (
     <div className="countGrid" aria-label="Participant counts">
-      <div><strong>6/9</strong><span>participants</span></div>
-      <div className="hr"><strong>3</strong><span>HR</span></div>
-      <div className="it-helpdesk"><strong>3</strong><span>IT Helpdesk</span></div>
+      <div><strong>{lobby.total}/{mockSession.maxParticipants}</strong><span>participants</span></div>
+      <div className="hr"><strong>{lobby.hr}</strong><span>HR</span></div>
+      <div className="it-helpdesk"><strong>{lobby.it}</strong><span>IT Helpdesk</span></div>
     </div>
   )
 }
@@ -1001,7 +838,7 @@ function CountGrid() {
 function RoleCountCards({ total, hr, it }: { total: number; hr: number; it: number }) {
   return (
     <div className="roleCountCards" aria-label="Role counts">
-      <div><strong>{total}/9</strong><span>Participants</span></div>
+      <div><strong>{total}/{mockSession.maxParticipants}</strong><span>Participants</span></div>
       <div className="hr"><strong>{hr}</strong><span>HR</span></div>
       <div className="it-helpdesk"><strong>{it}</strong><span>IT Helpdesk</span></div>
     </div>
@@ -1052,10 +889,12 @@ function DecisionSummary({ role, text }: { role: RoleId; text: string }) {
 function MetricGrid() {
   return (
     <div className="metricGrid" aria-label="Metric deltas">
-      <div><span>Incident Control</span><strong>+8</strong></div>
-      <div><span>Evidence Quality</span><strong>+6</strong></div>
-      <div><span>Business Continuity</span><strong>-3</strong></div>
-      <div><span>Employee Trust</span><strong>+4</strong></div>
+      {metricDeltas.map((metric) => (
+        <div key={metric.label}>
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+        </div>
+      ))}
     </div>
   )
 }

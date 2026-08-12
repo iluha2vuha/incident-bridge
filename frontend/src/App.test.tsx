@@ -15,6 +15,16 @@ describe('Incident Bridge static slice', () => {
     expect(screen.getByRole('link', { name: /round control/i })).toBeInTheDocument()
   })
 
+  it('keeps participant routes out of the development navigation', () => {
+    window.history.pushState({}, '', '/participant/join')
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: /incident bridge/i })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /review index/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^facilitator$/i })).not.toBeInTheDocument()
+  })
+
   it('shows only HR private information in the HR round variant', async () => {
     render(<App />)
 
