@@ -1,0 +1,717 @@
+.app {
+  min-height: 100svh;
+}
+
+.topbar {
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  gap: var(--space-4);
+  inset-block-start: 0;
+  padding: 10px var(--space-5);
+  position: sticky;
+  z-index: 10;
+}
+
+.brand,
+.topbar a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.brand {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.prototypeLabel {
+  background: var(--ink);
+  color: var(--surface);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px var(--space-2);
+  text-transform: uppercase;
+}
+
+.topbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.topbar nav a {
+  border: 1px solid var(--ink);
+  font-size: 0.82rem;
+  padding: 5px 10px;
+}
+
+.topbar nav a[aria-current='page'] {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+main {
+  padding: var(--space-6);
+}
+
+.reviewLayout {
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.reviewIntro {
+  margin-block-end: var(--space-6);
+  max-width: 760px;
+}
+
+.reviewGrid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.panel {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  padding: var(--space-5);
+}
+
+.panel h2,
+.artifact h2,
+.confirmationPanel h2,
+.waitingPanel h2 {
+  font-size: 0.95rem;
+  margin: 0 0 var(--space-3);
+}
+
+.linkGrid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.indexLink,
+.secondaryLink {
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: var(--space-2) 0;
+  text-decoration: none;
+}
+
+.controlsPanel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+legend,
+.fieldLabel,
+.panelLabel,
+.artifactLabel,
+.eyebrow {
+  color: var(--muted);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-block-end: var(--space-2);
+  text-transform: uppercase;
+}
+
+.segmented,
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.segmented button,
+.secondaryButton,
+.primaryButton {
+  align-items: center;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+
+.segmented button,
+.secondaryButton {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.segmented button[aria-pressed='true'],
+.primaryButton {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.primaryButton[disabled] {
+  background: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.twoColumn > * {
+  flex: 1 1 0;
+}
+
+.participantStage {
+  display: flex;
+  justify-content: center;
+}
+
+.phoneFrame {
+  background: var(--surface);
+  border: 6px solid var(--ink);
+  border-radius: 26px;
+  box-sizing: border-box;
+  max-width: 430px;
+  min-height: 700px;
+  overflow: hidden;
+  width: min(100%, 390px);
+}
+
+.screenStack,
+.roundScreen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.screenStack h1,
+.roundScreen h1,
+.facilitatorStack h1,
+.reviewIntro h1 {
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1.12;
+  margin: 0;
+}
+
+.reviewIntro h1 {
+  font-size: 2rem;
+}
+
+.muted,
+.smallNote {
+  color: var(--muted);
+}
+
+.smallNote {
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+  padding-block-start: var(--space-3);
+}
+
+input {
+  border: 2px solid var(--ink);
+  box-sizing: border-box;
+  color: var(--ink);
+  font: inherit;
+  min-height: 48px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.codeInput,
+.roomCode,
+.mono {
+  font-family: var(--mono);
+}
+
+.codeInput,
+.roomCode {
+  letter-spacing: 0.08em;
+}
+
+.roleCard {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-2);
+  min-height: 96px;
+  padding: var(--space-4);
+  text-align: start;
+}
+
+.roleCard.selected.hr,
+.roleCard.selected.it-helpdesk,
+.choiceCard.hr:has(input:checked),
+.choiceCard.it-helpdesk:has(input:checked) {
+  border-width: 3px;
+}
+
+.roleCard.selected.hr,
+.choiceCard.hr:has(input:checked) {
+  background: var(--hr-soft);
+  border-color: var(--hr);
+}
+
+.roleCard.selected.it-helpdesk,
+.choiceCard.it-helpdesk:has(input:checked) {
+  background: var(--it-soft);
+  border-color: var(--it);
+}
+
+.roleTitle {
+  font-weight: 800;
+}
+
+.countGrid,
+.roleCountCards,
+.voteMiniGrid,
+.metricGrid,
+.decisionGrid,
+.voteCards,
+.setupGrid,
+.controlGrid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.countGrid,
+.roleCountCards,
+.voteMiniGrid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.countGrid > div,
+.roleCountCards > div,
+.voteMiniGrid > div,
+.metricGrid > div {
+  border: 1px solid var(--ink);
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.countGrid strong,
+.roleCountCards strong,
+.voteMiniGrid strong {
+  color: var(--ink);
+  font-size: 1.2rem;
+}
+
+.countGrid span,
+.roleCountCards span,
+.voteMiniGrid span,
+.metricGrid span {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.hr strong,
+.decisionSummary.hr strong,
+.voteCard.hr span {
+  color: var(--hr);
+}
+
+.it-helpdesk strong,
+.decisionSummary.it-helpdesk strong,
+.voteCard.it-helpdesk span {
+  color: var(--it);
+}
+
+.notice {
+  border: 1px solid var(--border);
+  padding: var(--space-3);
+}
+
+.notice.warning {
+  background: var(--red-soft);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.notice.success {
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.notice.incident {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+  color: var(--amber-text);
+}
+
+.roleBadge {
+  border: 1.5px solid var(--ink);
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 5px 9px;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.roleBadge.hr {
+  background: var(--hr-soft);
+}
+
+.roleBadge.it-helpdesk {
+  background: var(--it-soft);
+}
+
+.privatePanel {
+  background: var(--soft-surface);
+  border-left: 4px solid var(--ink);
+  padding: var(--space-3);
+}
+
+.privatePanel.hr {
+  border-left-color: var(--hr);
+}
+
+.privatePanel.it-helpdesk {
+  border-left-color: var(--it);
+}
+
+.incidentPanel {
+  border: 2px solid var(--ink);
+  padding: var(--space-3);
+}
+
+.roundHeader,
+.ticketHeader,
+.emailToolbar,
+.roundControlHeader,
+.participantList li,
+.voteCard,
+.emailSender {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.statusLine {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  gap: 6px;
+  margin: 0;
+  text-transform: lowercase;
+}
+
+.statusLine span {
+  background: var(--green);
+  border-radius: 50%;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
+.statusLine.disconnected span {
+  background: var(--red);
+}
+
+.statusLine.reconnecting span {
+  background: var(--amber);
+}
+
+.artifact {
+  background: var(--surface);
+  border: 1px solid var(--ink);
+}
+
+.artifact > * {
+  margin: 0;
+  padding: var(--space-3);
+}
+
+.artifactLabel,
+.emailToolbar,
+.ticketHeader {
+  background: var(--soft-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.emailToolbar {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.emailSender {
+  justify-content: flex-start;
+}
+
+.emailSender p,
+.artifact dl,
+.artifact dd {
+  color: var(--muted);
+  margin: 0;
+}
+
+.avatar {
+  align-items: center;
+  background: var(--hr-soft);
+  border-radius: 50%;
+  color: var(--hr);
+  display: flex;
+  font-weight: 800;
+  height: 38px;
+  justify-content: center;
+  min-width: 38px;
+}
+
+.ticketArtifact dl {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.ticketArtifact dl div {
+  display: grid;
+}
+
+.ticketArtifact dt {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.statusPill {
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.choicePanel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.choicePanel fieldset {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.choiceCard {
+  align-items: flex-start;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-3);
+}
+
+.choiceCard input {
+  min-height: auto;
+  margin-block-start: 3px;
+  width: auto;
+}
+
+.confirmationPanel,
+.waitingPanel {
+  border: 2px solid var(--ink);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.decisionSummary {
+  border: 1px solid var(--ink);
+  padding: var(--space-3);
+}
+
+.metricGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.metricGrid strong {
+  color: var(--ink);
+}
+
+.learningPoint {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.facilitatorStage {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.desktopFrame {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  box-sizing: border-box;
+  min-height: 640px;
+  min-width: min(1280px, 100%);
+  width: min(1440px, 100%);
+}
+
+.facilitatorStack {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+}
+
+.setupGrid,
+.controlGrid,
+.facilitatorLobby {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.desktopAction {
+  justify-self: start;
+}
+
+.roomPanel {
+  align-items: center;
+  border-right: 2px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: center;
+  padding-inline-end: var(--space-6);
+  text-align: center;
+}
+
+.participantsPanel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.qrPlaceholder {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--ink),
+    var(--ink) 6px,
+    var(--surface) 6px,
+    var(--surface) 12px
+  );
+  border: 2px solid var(--ink);
+  height: 130px;
+  width: 130px;
+}
+
+.participantList {
+  border: 1px solid var(--ink);
+  list-style: none;
+  margin: 0;
+  max-height: 180px;
+  overflow: auto;
+  padding: 0;
+}
+
+.participantList li {
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-3);
+}
+
+.participantList li:last-child {
+  border-bottom: 0;
+}
+
+.voteCards {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.voteCard {
+  border: 2px solid var(--ink);
+  padding: var(--space-4);
+}
+
+.voteCard strong {
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+.eventTimeline {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  margin-block-start: var(--space-3);
+  padding-block-start: var(--space-3);
+}
+
+.confirmDesktop {
+  max-width: 580px;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar nav {
+    margin-inline-start: 0;
+  }
+
+  main {
+    padding: var(--space-4);
+  }
+
+  .phoneFrame {
+    border-width: 4px;
+    border-radius: 22px;
+    min-height: 680px;
+    width: 100%;
+  }
+
+  .screenStack,
+  .roundScreen {
+    padding: var(--space-4);
+  }
+
+  .countGrid,
+  .roleCountCards,
+  .voteMiniGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ticketArtifact dl,
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .desktopFrame {
+    min-width: 980px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
