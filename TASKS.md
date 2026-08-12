@@ -17,6 +17,8 @@
 
 ## Phase 2 - Paper Prototype
 
+Note: `docs/SCENARIO_DRY_REVIEW.md` records an agent-assisted pre-test review, but this does not complete Phase 2. These tasks require a real manual run with participants.
+
 - [ ] Run the scenario manually with at least 3 people.
 - [ ] Record confusing instructions, timing, obvious choices, and role imbalance.
 - [ ] Update `docs/GAME_DESIGN.md` and `scenarios/friday_pay_run.yaml`.
