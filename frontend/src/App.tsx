@@ -15,11 +15,14 @@ import type {
   EmailArtifactContent,
   FacilitatorLobbyVariant,
   FacilitatorSnapshot,
+  FinalMetric,
   MetricDelta,
   ParticipantRecord,
   ParticipantSnapshot,
   RoleArtifact,
   RoleId,
+  TieResolutionSnapshot,
+  TimelineItem,
   TicketArtifactContent,
   VoteVariant,
 } from './domain/model'
@@ -103,6 +106,14 @@ function PrototypeApp() {
             }
           />
           <Route
+            path="/participant/debrief"
+            element={
+              <ParticipantShell>
+                <ParticipantDebrief snapshot={state.participantSnapshot} />
+              </ParticipantShell>
+            }
+          />
+          <Route
             path="/participant/disconnected"
             element={
               <ParticipantShell>
@@ -154,7 +165,15 @@ function PrototypeApp() {
             path="/facilitator/lock"
             element={
               <FacilitatorShell>
-                <LockRoundConfirmation />
+                <LockRoundConfirmation snapshot={state.facilitatorSnapshot} />
+              </FacilitatorShell>
+            }
+          />
+          <Route
+            path="/facilitator/tie"
+            element={
+              <FacilitatorShell>
+                <TieResolution snapshot={state.facilitatorSnapshot} />
               </FacilitatorShell>
             }
           />
@@ -163,6 +182,14 @@ function PrototypeApp() {
             element={
               <FacilitatorShell>
                 <FacilitatorResult snapshot={state.facilitatorSnapshot} />
+              </FacilitatorShell>
+            }
+          />
+          <Route
+            path="/facilitator/debrief"
+            element={
+              <FacilitatorShell>
+                <FacilitatorDebrief snapshot={state.facilitatorSnapshot} />
               </FacilitatorShell>
             }
           />
@@ -643,6 +670,27 @@ function ParticipantResult({ snapshot }: { snapshot: ParticipantSnapshot }) {
       <Notice tone="neutral">
         Waiting for the facilitator to continue, {snapshot.role.shortLabel}.
       </Notice>
+      <Link className="secondaryLink" to="/participant/debrief">
+        Static debrief preview
+      </Link>
+    </section>
+  )
+}
+
+function ParticipantDebrief({ snapshot }: { snapshot: ParticipantSnapshot }) {
+  return (
+    <section className="screenStack">
+      <p className="eyebrow">Final organisational outcome</p>
+      <h1>Final debrief</h1>
+      <FinalMetricGrid metrics={snapshot.debrief.metrics} compact />
+      <TimelineList items={snapshot.debrief.timeline.slice(0, 3)} compact />
+      <section className="debriefPanel" aria-labelledby="participant-discussion">
+        <h2 id="participant-discussion">Discussion prompts</h2>
+        <DebriefQuestionList questions={snapshot.debrief.discussionQuestions.slice(0, 3)} />
+      </section>
+      <Notice tone="neutral">
+        Results are organisational learning signals, not individual scores.
+      </Notice>
     </section>
   )
 }
@@ -816,19 +864,55 @@ function LiveRoundControl({
   )
 }
 
-function LockRoundConfirmation() {
+function LockRoundConfirmation({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   return (
     <section className="facilitatorStack confirmDesktop">
       <h1>Lock voting for this round?</h1>
       <p className="muted">HR: 2/3 votes. IT Helpdesk: 1/3 votes.</p>
       <Notice tone="warning">Late votes will be rejected after locking.</Notice>
+      <section className="panel">
+        <h2>Possible facilitator action</h2>
+        <p>
+          {roles[snapshot.tie.role].label} may need a tie-break if the final missing vote lands
+          evenly.
+        </p>
+      </section>
       <div className="buttonRow twoColumn">
         <Link className="secondaryButton" to="/facilitator/round">
           Cancel
         </Link>
+        <Link className="secondaryButton" to="/facilitator/tie">
+          Resolve tie
+        </Link>
         <Link className="primaryButton" to="/facilitator/result">
           Confirm lock
         </Link>
+      </div>
+    </section>
+  )
+}
+
+function TieResolution({ snapshot }: { snapshot: FacilitatorSnapshot }) {
+  return (
+    <section className="facilitatorStack">
+      <div className="roundControlHeader">
+        <div>
+          <p className="eyebrow">Tie requires resolution</p>
+          <h1>{roles[snapshot.tie.role].label} department decision</h1>
+          <p className="muted">
+            Ask the tied department to discuss briefly, then choose the final department action.
+          </p>
+        </div>
+        <Link className="primaryButton desktopAction" to="/facilitator/result">
+          Confirm resolution
+        </Link>
+      </div>
+      <div className="tieGrid">
+        <TieChoiceList tie={snapshot.tie} />
+        <section className="panel">
+          <h2>Facilitator note</h2>
+          <p>{snapshot.privateRoundNote}</p>
+        </section>
       </div>
     </section>
   )
@@ -842,9 +926,9 @@ function FacilitatorResult({ snapshot }: { snapshot: FacilitatorSnapshot }) {
           <p className="eyebrow">Ready to reveal</p>
           <h1>Round consequence</h1>
         </div>
-        <button type="button" className="primaryButton desktopAction">
+        <Link className="primaryButton desktopAction" to="/facilitator/debrief">
           Reveal to participants
-        </button>
+        </Link>
       </div>
       <div className="controlGrid">
         <section className="panel">
@@ -858,6 +942,122 @@ function FacilitatorResult({ snapshot }: { snapshot: FacilitatorSnapshot }) {
           <MetricGrid metrics={snapshot.metricDeltas} />
           <p className="learningPoint">Learning point: {snapshot.round.learning}</p>
         </section>
+      </div>
+    </section>
+  )
+}
+
+function FacilitatorDebrief({ snapshot }: { snapshot: FacilitatorSnapshot }) {
+  return (
+    <section className="facilitatorStack">
+      <div className="roundControlHeader">
+        <div>
+          <p className="eyebrow">Completed session</p>
+          <h1>Final debrief</h1>
+          <p className="muted">
+            Use this static view to lead the discussion from outcomes to generic response habits.
+          </p>
+        </div>
+        <button type="button" className="primaryButton desktopAction">
+          End session
+        </button>
+      </div>
+      <FinalMetricGrid metrics={snapshot.debrief.metrics} />
+      <div className="debriefGrid">
+        <section className="panel">
+          <h2>Decision timeline</h2>
+          <TimelineList items={snapshot.debrief.timeline} />
+        </section>
+        <section className="panel">
+          <h2>Learning points</h2>
+          <LearningPointList points={snapshot.debrief.learningPoints} />
+        </section>
+        <section className="panel debriefQuestionsPanel">
+          <h2>Discussion questions</h2>
+          <DebriefQuestionList questions={snapshot.debrief.discussionQuestions} />
+        </section>
+      </div>
+    </section>
+  )
+}
+
+function FinalMetricGrid({
+  metrics,
+  compact = false,
+}: {
+  metrics: FinalMetric[]
+  compact?: boolean
+}) {
+  return (
+    <div className={`finalMetricGrid ${compact ? 'compact' : ''}`} aria-label="Final metrics">
+      {metrics.map((metric) => (
+        <div className={metric.trend} key={metric.label}>
+          <span>{metric.label}</span>
+          <strong>{metric.value}</strong>
+          <em>{metric.trend}</em>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TimelineList({ items, compact = false }: { items: TimelineItem[]; compact?: boolean }) {
+  return (
+    <ol className={`timelineList ${compact ? 'compact' : ''}`}>
+      {items.map((item) => (
+        <li key={item.round}>
+          <span className="mono">R{item.round}</span>
+          <div>
+            <strong>{item.title}</strong>
+            {!compact ? (
+              <p>
+                HR: {item.hrDecision} IT Helpdesk: {item.itDecision}
+              </p>
+            ) : null}
+            <p>{item.outcome}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+function LearningPointList({ points }: { points: string[] }) {
+  return (
+    <ul className="debriefList">
+      {points.map((point) => (
+        <li key={point}>{point}</li>
+      ))}
+    </ul>
+  )
+}
+
+function DebriefQuestionList({ questions }: { questions: string[] }) {
+  return (
+    <ol className="debriefList">
+      {questions.map((question) => (
+        <li key={question}>{question}</li>
+      ))}
+    </ol>
+  )
+}
+
+function TieChoiceList({ tie }: { tie: TieResolutionSnapshot }) {
+  return (
+    <section className="panel">
+      <h2>Tied choices</h2>
+      <div className="tieChoiceList">
+        {tie.choices.map((choice, index) => (
+          <button
+            type="button"
+            className={`tieChoice ${tie.role}`}
+            aria-pressed={index === 0}
+            key={choice.id}
+          >
+            <span className="voteCount">{choice.votes} votes</span>
+            <span>{choice.label}</span>
+          </button>
+        ))}
       </div>
     </section>
   )

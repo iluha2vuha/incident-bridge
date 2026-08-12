@@ -26,6 +26,7 @@ describe('mock scenario adapter', () => {
     expect(scenario.round.consequence).toBe(firstRound.public_consequence)
     expect(scenario.round.learning).toBe(firstRound.learning_point)
     expect(scenario.facilitatorNote).toBe(firstRound.facilitator_note)
+    expect(scenario.finalDebrief).toEqual(fridayPayRunScenarioDraft.final_debrief)
   })
 
   it('maps role-private information and choices from the first scenario round', () => {

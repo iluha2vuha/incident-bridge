@@ -7,7 +7,14 @@ import type {
   RoleId,
   VoteVariant,
 } from '../domain/model'
-import { metricDeltas, mockDepartmentDecisions, roles, scenario } from './scenario'
+import {
+  metricDeltas,
+  mockDebrief,
+  mockDepartmentDecisions,
+  mockTieResolution,
+  roles,
+  scenario,
+} from './scenario'
 import { fakeParticipants, lobbySnapshots, mockSession, voteSnapshots } from './session'
 
 function roleArtifact(role: RoleId): RoleArtifact {
@@ -33,6 +40,7 @@ export function buildParticipantSnapshot(
     artifact: roleArtifact(role),
     departmentDecisions: mockDepartmentDecisions,
     metricDeltas,
+    debrief: mockDebrief,
   }
 }
 
@@ -52,5 +60,7 @@ export function buildFacilitatorSnapshot(
     metricDeltas,
     privateRoundNote: scenario.facilitatorNote,
     scenarioTitle: scenario.title,
+    debrief: mockDebrief,
+    tie: mockTieResolution,
   }
 }

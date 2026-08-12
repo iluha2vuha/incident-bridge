@@ -34,6 +34,7 @@ export function buildMockScenarioContent(
     roles: buildRoleContent(scenarioDraft, round),
     artifacts,
     facilitatorNote: round.facilitator_note,
+    finalDebrief: scenarioDraft.final_debrief,
   }
 }
 

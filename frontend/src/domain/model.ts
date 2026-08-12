@@ -70,6 +70,7 @@ export type ScenarioContent = {
   roles: Record<RoleId, RoleContent>
   artifacts: ScenarioArtifacts
   facilitatorNote: string
+  finalDebrief: string[]
 }
 
 export type ParticipantRecord = {
@@ -89,6 +90,7 @@ export type ParticipantSnapshot = {
   artifact: RoleArtifact
   departmentDecisions: Record<RoleId, string>
   metricDeltas: MetricDelta[]
+  debrief: DebriefSnapshot
 }
 
 export type FacilitatorSnapshot = {
@@ -103,6 +105,8 @@ export type FacilitatorSnapshot = {
   metricDeltas: MetricDelta[]
   privateRoundNote: string
   scenarioTitle: string
+  debrief: DebriefSnapshot
+  tie: TieResolutionSnapshot
 }
 
 export type RoleCounts = {
@@ -124,6 +128,38 @@ export type VoteSnapshot = {
 export type MetricDelta = {
   label: string
   value: string
+}
+
+export type FinalMetric = {
+  label: string
+  value: number
+  trend: 'strong' | 'steady' | 'strained'
+}
+
+export type TimelineItem = {
+  round: number
+  title: string
+  hrDecision: string
+  itDecision: string
+  outcome: string
+}
+
+export type DebriefSnapshot = {
+  metrics: FinalMetric[]
+  timeline: TimelineItem[]
+  learningPoints: string[]
+  discussionQuestions: string[]
+}
+
+export type TieChoice = {
+  id: string
+  label: string
+  votes: number
+}
+
+export type TieResolutionSnapshot = {
+  role: RoleId
+  choices: TieChoice[]
 }
 
 export type ReviewNavGroup = {

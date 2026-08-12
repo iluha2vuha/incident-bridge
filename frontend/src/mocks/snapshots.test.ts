@@ -29,5 +29,7 @@ describe('mock protocol snapshots', () => {
     expect(snapshot.vote.warning).toMatch(/not voted/i)
     expect(snapshot.privateRoundNote).toMatch(/preserve the message/i)
     expect(snapshot.participants).toHaveLength(6)
+    expect(snapshot.debrief.timeline).toHaveLength(5)
+    expect(snapshot.tie.choices).toHaveLength(2)
   })
 })

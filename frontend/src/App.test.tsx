@@ -13,6 +13,8 @@ describe('Incident Bridge static slice', () => {
 
     expect(screen.getByRole('heading', { name: /one round, two truths/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /round control/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /debrief/i })).toHaveLength(2)
+    expect(screen.getByRole('link', { name: /^tie$/i })).toBeInTheDocument()
   })
 
   it('keeps participant routes out of the development navigation', () => {
@@ -72,5 +74,25 @@ describe('Incident Bridge static slice', () => {
     await userEvent.click(screen.getByRole('button', { name: /empty role/i }))
 
     expect(screen.getByText(/IT Helpdesk has no participants/i)).toBeInTheDocument()
+  })
+
+  it('renders the participant final debrief preview', () => {
+    window.history.pushState({}, '', '/participant/debrief')
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: /final debrief/i })).toBeInTheDocument()
+    expect(screen.getByText(/results are organisational learning signals/i)).toBeInTheDocument()
+    expect(screen.getByText(/incident control/i)).toBeInTheDocument()
+  })
+
+  it('renders facilitator tie resolution choices', () => {
+    window.history.pushState({}, '', '/facilitator/tie')
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: /hr department decision/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /2 votes/i })).toHaveLength(2)
+    expect(screen.getByRole('link', { name: /confirm resolution/i })).toBeInTheDocument()
   })
 })

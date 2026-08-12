@@ -43,9 +43,9 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 5 - Static Interface
 
-- [ ] Build fake-data participant flow.
-- [ ] Build fake-data facilitator flow.
-- [ ] Verify mobile and desktop layouts.
+- [x] Build fake-data participant flow.
+- [x] Build fake-data facilitator flow.
+- [x] Verify mobile and desktop layouts.
 
 ## Phase 6 - Room Creation / Joining
 
