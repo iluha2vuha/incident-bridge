@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type {
   ChoiceStep,
   ConnectionState,
   FacilitatorLobbyVariant,
+  LiveLobbySnapshot,
+  LiveSessionState,
   RoleId,
   VoteVariant,
 } from '../domain/model'
@@ -16,11 +18,21 @@ export function usePrototypeState() {
   const [connection, setConnection] = useState<ConnectionState>('connected')
   const [lobbyVariant, setLobbyVariant] = useState<FacilitatorLobbyVariant>('ready')
   const [voteVariant, setVoteVariant] = useState<VoteVariant>('open')
+  const [liveSession, setLiveSession] = useState<LiveSessionState | null>(null)
 
   const roleContent = roles[role]
   const selectedChoice = roleContent.choices.find((choice) => choice.id === selectedChoiceId)
   const participantSnapshot = buildParticipantSnapshot(role, connection)
   const facilitatorSnapshot = buildFacilitatorSnapshot(lobbyVariant, voteVariant)
+  const updateLiveLobby = useCallback((lobby: LiveLobbySnapshot) => {
+    setLiveSession((current) => {
+      if (!current || current.sessionId !== lobby.session_id) {
+        return current
+      }
+
+      return { ...current, lobby }
+    })
+  }, [])
 
   return {
     role,
@@ -36,6 +48,9 @@ export function usePrototypeState() {
     setLobbyVariant,
     voteVariant,
     setVoteVariant,
+    liveSession,
+    setLiveSession,
+    updateLiveLobby,
     participantSnapshot,
     facilitatorSnapshot,
   }

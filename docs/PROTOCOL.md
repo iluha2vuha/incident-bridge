@@ -1,6 +1,6 @@
 # Protocol
 
-This is the intended future protocol. It is not implemented yet.
+This is the intended protocol. Phase 6 implements the room creation, joining, close, and live lobby update subset.
 
 ## Authority
 
@@ -27,6 +27,7 @@ CREATED
 - Sent by participant.
 - Includes room code and temporary nickname.
 - Returns participant ID and private participant token if accepted.
+- Phase 6 HTTP endpoint: `POST /api/sessions/join`.
 
 `session:reconnect`
 
@@ -48,6 +49,13 @@ CREATED
 - Only one accepted vote per participant per round.
 
 ## Facilitator To Server Events
+
+`session:create`
+
+- Sent by facilitator.
+- Includes scenario ID and mode.
+- Returns session ID, public room code, private facilitator token, join URL, and lobby snapshot.
+- Phase 6 HTTP endpoint: `POST /api/sessions`.
 
 `game:start`
 
@@ -72,6 +80,7 @@ CREATED
 `game:end`
 
 - Closes the session and rejects further actions.
+- Phase 6 lobby close endpoint: `POST /api/sessions/{session_id}/close`.
 
 ## Server To Client Events
 
@@ -82,6 +91,7 @@ CREATED
 `lobby:updated`
 
 - Participant count, role counts, and connection status.
+- Phase 6 WebSocket endpoint: `GET /ws/sessions/{session_id}/lobby` with either `facilitator_token` or `participant_token` as a query parameter.
 
 `role:confirmed`
 

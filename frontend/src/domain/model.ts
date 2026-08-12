@@ -162,6 +162,37 @@ export type TieResolutionSnapshot = {
   choices: TieChoice[]
 }
 
+export type LiveParticipant = {
+  id: string
+  nickname: string
+  role_id: string | null
+  status: ConnectionState
+}
+
+export type LiveLobbySnapshot = {
+  session_id: string
+  room_code: string
+  phase: 'lobby' | 'closed'
+  scenario_id: string
+  mode: 'quick' | 'standard'
+  max_participants: number
+  participant_count: number
+  participants: LiveParticipant[]
+  warning: string
+}
+
+export type LiveSessionState = {
+  actor: 'facilitator' | 'participant'
+  sessionId: string
+  roomCode: string
+  facilitatorToken?: string
+  participantId?: string
+  participantToken?: string
+  participantName?: string
+  joinUrl?: string
+  lobby: LiveLobbySnapshot
+}
+
 export type ReviewNavGroup = {
   title: string
   links: [href: string, label: string][]

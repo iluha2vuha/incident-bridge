@@ -169,6 +169,11 @@ legend,
   cursor: not-allowed;
 }
 
+.secondaryButton[disabled] {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 .twoColumn > * {
   flex: 1 1 0;
 }
@@ -280,6 +285,7 @@ input {
 
 .countGrid,
 .roleCountCards,
+.liveLobbyCount,
 .voteMiniGrid,
 .metricGrid,
 .finalMetricGrid,
@@ -295,12 +301,14 @@ input {
 
 .countGrid,
 .roleCountCards,
+.liveLobbyCount,
 .voteMiniGrid {
   grid-template-columns: repeat(3, 1fr);
 }
 
 .countGrid > div,
 .roleCountCards > div,
+.liveLobbyCount > div,
 .voteMiniGrid > div,
 .metricGrid > div {
   border: 1px solid var(--ink);
@@ -313,6 +321,7 @@ input {
 
 .countGrid strong,
 .roleCountCards strong,
+.liveLobbyCount strong,
 .voteMiniGrid strong {
   color: var(--ink);
   font-size: 1.2rem;
@@ -320,6 +329,7 @@ input {
 
 .countGrid span,
 .roleCountCards span,
+.liveLobbyCount span,
 .voteMiniGrid span,
 .metricGrid span {
   color: var(--muted);
@@ -700,6 +710,13 @@ input {
   border-bottom: 0;
 }
 
+.emptyLobby {
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  padding: var(--space-5);
+  text-align: center;
+}
+
 .voteCards {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -870,6 +887,7 @@ input {
 
   .countGrid,
   .roleCountCards,
+  .liveLobbyCount,
   .voteMiniGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

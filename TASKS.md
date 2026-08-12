@@ -49,10 +49,10 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 6 - Room Creation / Joining
 
-- [ ] Create sessions with public room codes and private facilitator tokens.
-- [ ] Join with temporary nickname and private participant token.
-- [ ] Handle invalid, full, closed, and expired rooms.
-- [ ] Show live lobby updates.
+- [x] Create sessions with public room codes and private facilitator tokens.
+- [x] Join with temporary nickname and private participant token.
+- [x] Handle invalid, full, closed, and expired rooms.
+- [x] Show live lobby updates.
 
 ## Phase 7 - Role Selection
 

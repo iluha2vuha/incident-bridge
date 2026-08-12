@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Link,
@@ -16,6 +16,9 @@ import type {
   FacilitatorLobbyVariant,
   FacilitatorSnapshot,
   FinalMetric,
+  LiveLobbySnapshot,
+  LiveParticipant,
+  LiveSessionState,
   MetricDelta,
   ParticipantRecord,
   ParticipantSnapshot,
@@ -26,6 +29,12 @@ import type {
   TicketArtifactContent,
   VoteVariant,
 } from './domain/model'
+import {
+  closeLiveSession,
+  createLiveSession,
+  joinLiveSession,
+  lobbyWebSocketUrl,
+} from './live/sessionApi'
 import { reviewNavGroups, roles } from './mocks/scenario'
 import { mockSession } from './mocks/session'
 import { usePrototypeState } from './prototype/usePrototypeState'
@@ -41,6 +50,35 @@ function App() {
 
 function PrototypeApp() {
   const state = usePrototypeState()
+  const liveSession = state.liveSession
+  const liveActor = liveSession?.actor
+  const liveFacilitatorToken = liveSession?.facilitatorToken
+  const liveParticipantToken = liveSession?.participantToken
+  const liveSessionId = liveSession?.sessionId
+  const updateLiveLobby = state.updateLiveLobby
+
+  useEffect(() => {
+    if (!liveSessionId || !liveActor) {
+      return
+    }
+
+    const websocket = new WebSocket(
+      lobbyWebSocketUrl(liveSessionId, liveActor, liveFacilitatorToken, liveParticipantToken),
+    )
+
+    websocket.onmessage = (event) => {
+      const message = JSON.parse(event.data as string) as {
+        type: string
+        lobby?: LiveLobbySnapshot
+      }
+
+      if (message.type === 'lobby:updated' && message.lobby) {
+        updateLiveLobby(message.lobby)
+      }
+    }
+
+    return () => websocket.close()
+  }, [liveActor, liveFacilitatorToken, liveParticipantToken, liveSessionId, updateLiveLobby])
 
   return (
     <div className="app">
@@ -53,7 +91,7 @@ function PrototypeApp() {
             path="/participant/join"
             element={
               <ParticipantShell>
-                <JoinScreen />
+                <JoinScreen setLiveSession={state.setLiveSession} />
               </ParticipantShell>
             }
           />
@@ -69,7 +107,10 @@ function PrototypeApp() {
             path="/participant/lobby"
             element={
               <ParticipantShell>
-                <ParticipantLobby snapshot={state.participantSnapshot} />
+                <ParticipantLobby
+                  snapshot={state.participantSnapshot}
+                  liveSession={state.liveSession}
+                />
               </ParticipantShell>
             }
           />
@@ -133,7 +174,10 @@ function PrototypeApp() {
             path="/facilitator/create"
             element={
               <FacilitatorShell>
-                <CreateSession snapshot={state.facilitatorSnapshot} />
+                <CreateSession
+                  snapshot={state.facilitatorSnapshot}
+                  setLiveSession={state.setLiveSession}
+                />
               </FacilitatorShell>
             }
           />
@@ -145,6 +189,8 @@ function PrototypeApp() {
                   snapshot={state.facilitatorSnapshot}
                   variant={state.lobbyVariant}
                   setVariant={state.setLobbyVariant}
+                  liveSession={state.liveSession}
+                  setLiveSession={state.setLiveSession}
                 />
               </FacilitatorShell>
             }
@@ -413,9 +459,37 @@ function FacilitatorShell({ children }: { children: ReactNode }) {
   )
 }
 
-function JoinScreen() {
+function JoinScreen({
+  setLiveSession,
+}: {
+  setLiveSession: (session: LiveSessionState | null) => void
+}) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const queryRoomCode = new URLSearchParams(location.search).get('room') ?? mockSession.roomCode
+  const [roomCode, setRoomCode] = useState(queryRoomCode)
+  const [nickname, setNickname] = useState(mockSession.participantName)
+  const [error, setError] = useState('')
+  const [isJoining, setIsJoining] = useState(false)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setIsJoining(true)
+
+    try {
+      const session = await joinLiveSession(roomCode, nickname)
+      setLiveSession(session)
+      navigate('/participant/lobby')
+    } catch (joinError) {
+      setError(joinError instanceof Error ? joinError.message : 'Could not join room.')
+    } finally {
+      setIsJoining(false)
+    }
+  }
+
   return (
-    <section className="screenStack">
+    <form className="screenStack" onSubmit={handleSubmit}>
       <StatusLine state="connected" />
       <div>
         <p className="eyebrow">Fictional training exercise</p>
@@ -425,18 +499,34 @@ function JoinScreen() {
       <label className="fieldLabel" htmlFor="room-code">
         Room code
       </label>
-      <input id="room-code" value={mockSession.roomCode} readOnly className="codeInput" />
+      <input
+        id="room-code"
+        value={roomCode}
+        className="codeInput"
+        onChange={(event) => setRoomCode(event.target.value.toUpperCase())}
+        maxLength={6}
+      />
       <label className="fieldLabel" htmlFor="nickname">
         Temporary nickname
       </label>
-      <input id="nickname" value={mockSession.participantName} readOnly />
-      <Link className="primaryButton" to="/participant/role">
-        Join room
-      </Link>
+      <input
+        id="nickname"
+        value={nickname}
+        maxLength={24}
+        onChange={(event) => setNickname(event.target.value)}
+      />
+      {error ? (
+        <Notice tone="warning" live>
+          {error}
+        </Notice>
+      ) : null}
+      <button type="submit" className="primaryButton" disabled={isJoining}>
+        {isJoining ? 'Joining...' : 'Join room'}
+      </button>
       <p className="smallNote">
         Your nickname is temporary and visible only during this review session.
       </p>
-    </section>
+    </form>
   )
 }
 
@@ -481,7 +571,35 @@ function RoleCard({
   )
 }
 
-function ParticipantLobby({ snapshot }: { snapshot: ParticipantSnapshot }) {
+function ParticipantLobby({
+  snapshot,
+  liveSession,
+}: {
+  snapshot: ParticipantSnapshot
+  liveSession: LiveSessionState | null
+}) {
+  if (liveSession?.actor === 'participant') {
+    return (
+      <section className="screenStack">
+        <StatusLine state="connected" />
+        <div>
+          <p className="eyebrow">Room</p>
+          <h1 className="roomCode">{liveSession.roomCode}</h1>
+          <p className="muted">{liveSession.participantName}, you are in the lobby.</p>
+        </div>
+        <LiveLobbyCount lobby={liveSession.lobby} />
+        {liveSession.lobby.warning ? (
+          <Notice tone="warning" live>
+            {liveSession.lobby.warning}
+          </Notice>
+        ) : (
+          <Notice tone="neutral">Waiting for the facilitator.</Notice>
+        )}
+        <LiveParticipantList participants={liveSession.lobby.participants} />
+      </section>
+    )
+  }
+
   return (
     <section className="screenStack">
       <StatusLine state={snapshot.connection} />
@@ -717,7 +835,33 @@ function ConnectionExample({
   )
 }
 
-function CreateSession({ snapshot }: { snapshot: FacilitatorSnapshot }) {
+function CreateSession({
+  snapshot,
+  setLiveSession,
+}: {
+  snapshot: FacilitatorSnapshot
+  setLiveSession: (session: LiveSessionState | null) => void
+}) {
+  const navigate = useNavigate()
+  const [mode, setMode] = useState<'quick' | 'standard'>('standard')
+  const [error, setError] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+
+  async function handleCreate() {
+    setError('')
+    setIsCreating(true)
+
+    try {
+      const session = await createLiveSession(mode)
+      setLiveSession(session)
+      navigate('/facilitator/lobby')
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : 'Could not create session.')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   return (
     <section className="facilitatorStack">
       <div>
@@ -731,12 +875,12 @@ function CreateSession({ snapshot }: { snapshot: FacilitatorSnapshot }) {
         <section className="panel">
           <h2>Mode</h2>
           <SegmentedControl
-            value="standard"
+            value={mode}
             options={[
               ['standard', 'Standard, 5 rounds'],
               ['quick', 'Quick, 1 3 5'],
             ]}
-            onChange={() => undefined}
+            onChange={(value) => setMode(value as 'quick' | 'standard')}
           />
         </section>
         <section className="panel">
@@ -744,9 +888,19 @@ function CreateSession({ snapshot }: { snapshot: FacilitatorSnapshot }) {
           <p>{snapshot.scenarioTitle}</p>
         </section>
       </div>
-      <Link className="primaryButton desktopAction" to="/facilitator/lobby">
-        Create temporary session
-      </Link>
+      {error ? (
+        <Notice tone="warning" live>
+          {error}
+        </Notice>
+      ) : null}
+      <button
+        type="button"
+        className="primaryButton desktopAction"
+        disabled={isCreating}
+        onClick={handleCreate}
+      >
+        {isCreating ? 'Creating...' : 'Create temporary session'}
+      </button>
     </section>
   )
 }
@@ -755,11 +909,81 @@ function FacilitatorLobby({
   snapshot,
   variant,
   setVariant,
+  liveSession,
+  setLiveSession,
 }: {
   snapshot: FacilitatorSnapshot
   variant: FacilitatorLobbyVariant
   setVariant: (variant: FacilitatorLobbyVariant) => void
+  liveSession: LiveSessionState | null
+  setLiveSession: (session: LiveSessionState | null) => void
 }) {
+  const [closeError, setCloseError] = useState('')
+
+  async function handleCloseLiveSession() {
+    if (!liveSession) {
+      return
+    }
+
+    setCloseError('')
+
+    try {
+      const lobby = await closeLiveSession(liveSession)
+      setLiveSession({ ...liveSession, lobby })
+    } catch (error) {
+      setCloseError(error instanceof Error ? error.message : 'Could not close session.')
+    }
+  }
+
+  if (liveSession?.actor === 'facilitator') {
+    return (
+      <section className="facilitatorStack">
+        <div className="facilitatorLobby">
+          <section className="roomPanel" aria-labelledby="live-room-code">
+            <p className="eyebrow">Room code</p>
+            <h1 id="live-room-code" className="roomCode">
+              {liveSession.roomCode}
+            </h1>
+            <div className="qrPlaceholder" aria-label="QR code placeholder" />
+            <p className="muted">{liveSession.joinUrl}</p>
+          </section>
+          <section className="participantsPanel">
+            <LiveLobbyCount lobby={liveSession.lobby} />
+            {liveSession.lobby.warning ? (
+              <Notice tone="warning" live>
+                {liveSession.lobby.warning}
+              </Notice>
+            ) : null}
+            {liveSession.lobby.phase === 'closed' ? (
+              <Notice tone="warning" live>
+                Room is closed.
+              </Notice>
+            ) : null}
+            {closeError ? (
+              <Notice tone="warning" live>
+                {closeError}
+              </Notice>
+            ) : null}
+            <LiveParticipantList participants={liveSession.lobby.participants} />
+            <div className="buttonRow">
+              <button
+                type="button"
+                className="secondaryButton"
+                disabled={liveSession.lobby.phase === 'closed'}
+                onClick={handleCloseLiveSession}
+              >
+                End session
+              </button>
+              <button type="button" className="primaryButton" disabled>
+                Start exercise
+              </button>
+            </div>
+          </section>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="facilitatorStack">
       <div className="facilitatorLobby">
@@ -1203,6 +1427,27 @@ function RoleCountCards({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   )
 }
 
+function LiveLobbyCount({ lobby }: { lobby: LiveLobbySnapshot }) {
+  return (
+    <div className="liveLobbyCount" aria-label="Live lobby count">
+      <div>
+        <strong>
+          {lobby.participant_count}/{lobby.max_participants}
+        </strong>
+        <span>participants</span>
+      </div>
+      <div>
+        <strong>{lobby.mode}</strong>
+        <span>mode</span>
+      </div>
+      <div>
+        <strong>{lobby.phase}</strong>
+        <span>status</span>
+      </div>
+    </div>
+  )
+}
+
 function ParticipantList({ participants }: { participants: ParticipantRecord[] }) {
   return (
     <ul className="participantList" aria-label="Connected participants">
@@ -1210,6 +1455,28 @@ function ParticipantList({ participants }: { participants: ParticipantRecord[] }
         <li key={participant.name}>
           <span>{participant.name}</span>
           <span>{participant.role}</span>
+          <span>{participant.status}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function LiveParticipantList({ participants }: { participants: LiveParticipant[] }) {
+  if (participants.length === 0) {
+    return (
+      <div className="emptyLobby" aria-live="polite">
+        No participants have joined yet.
+      </div>
+    )
+  }
+
+  return (
+    <ul className="participantList" aria-label="Live lobby participants">
+      {participants.map((participant) => (
+        <li key={participant.id}>
+          <span>{participant.nickname}</span>
+          <span>{participant.role_id ?? 'No role yet'}</span>
           <span>{participant.status}</span>
         </li>
       ))}
