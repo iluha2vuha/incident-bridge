@@ -34,7 +34,7 @@ This early threat model is intentionally practical. It records risks and version
 | Nickname injection / XSS | Nickname renders script in lobby | Validate length and characters; render text safely; never allow arbitrary HTML |
 | Malformed WebSocket events | Unexpected payload crashes server | Parse and validate every event with Pydantic schemas |
 | Token leakage in logs | Secrets exposed in terminal or hosting logs | Never log facilitator or participant tokens; redact auth fields |
-| Excessive room creation | Public demo memory exhaustion | Rate limits, active-room caps, session expiration |
+| Excessive room creation | Public demo memory exhaustion | Rate limits, active-room caps, simple cleanup when the facilitator ends a session |
 | Reconnect duplication | Refresh creates multiple participants | Use private reconnection tokens and participant IDs |
 | Facilitator disconnection | Room cannot continue | Facilitator reconnect token and authoritative server state |
 | Server restart | In-memory sessions vanish | Document as version 1 limitation; consider persistence only later |
@@ -45,7 +45,7 @@ This early threat model is intentionally practical. It records risks and version
 - Use `secrets` or equivalent cryptographically secure randomness for tokens.
 - Keep room code and facilitator token separate.
 - Authenticate at connection time and re-check authorisation for sensitive events.
-- Enforce maximum participants per room.
+- Enforce maximum participants per room; version 1 cap is 9.
 - Enforce maximum WebSocket message size.
 - Reject malformed event types.
 - Encode all participant-provided text on render.
@@ -56,6 +56,5 @@ This early threat model is intentionally practical. It records risks and version
 
 - What rate limits are enough for a public portfolio demo?
 - Should public demo sessions require a lightweight facilitator passphrase?
-- What is the acceptable session expiration time?
-- Should anonymous result export be local-only or downloadable from the facilitator view?
+- How simple should session cleanup be beyond facilitator shutdown?
 - What behaviour is best if the facilitator token is lost during a live room?

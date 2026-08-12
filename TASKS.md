@@ -85,16 +85,14 @@
 
 ## Phase 13 - Deployment
 
-- [ ] Document public HTTPS single-instance deployment.
-- [ ] Document local-network fallback.
+- [ ] Document the easiest first demo route after rehearsal.
+- [ ] Document the secondary demo route only if useful.
 - [ ] Add QR-code generation.
 - [ ] Rehearse with real devices.
 
 ## Phase 14 - Polish / Testing
 
-- [ ] Run 3, 6, and 15 participant rehearsals.
-- [ ] Add projector view if needed.
-- [ ] Add anonymous result export only if useful.
+- [ ] Run 2, 6, and 9 participant rehearsals.
 - [ ] Prepare portfolio-safe README, screenshots, and architecture diagram.
 
 ## Later / Not Version 1

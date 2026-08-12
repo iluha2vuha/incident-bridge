@@ -50,7 +50,7 @@ Avoid:
 - Round controls.
 - Vote completion indicators.
 - Tie resolution.
-- Projector-friendly reveal.
+- Clear reveal suitable for the facilitator laptop.
 - Designed for someone speaking while operating it.
 
 ## Participant Journey
@@ -303,7 +303,7 @@ Says/does: connects lessons to generic reporting, verification, and incident-res
 
 Primary control: end session.
 
-Secondary information: optional anonymous export later.
+Secondary information: decision timeline and learning points.
 
 Problems: participant asks for official policy; facilitator redirects to approved organisational procedures.
 
@@ -467,7 +467,7 @@ Hierarchy: setup controls only.
 +--------------------------------------------------------------+
 | Room AB7K2P                       QR PLACEHOLDER             |
 | Join: incident-bridge.local/join/AB7K2P                      |
-| Participants 6/15   HR 3   IT 3                              |
+| Participants 6/9    HR 3   IT 3                              |
 | Connected list                                               |
 | Warning area                                                 |
 | [ Start exercise ] [ End session ]                           |
@@ -481,7 +481,7 @@ Hierarchy: room code and QR first, role counts second, control last.
 ```text
 +--------------------------------------------------------------+
 | Room AB7K2P                                                  |
-| Participants 4/15   HR 4   IT 0                              |
+| Participants 4/9    HR 4   IT 0                              |
 | Warning: IT Helpdesk has no participants                     |
 | [ Start anyway ] [ Wait ]                                    |
 +--------------------------------------------------------------+

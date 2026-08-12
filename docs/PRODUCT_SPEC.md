@@ -12,9 +12,8 @@ Awareness training can explain rules, but real incidents require judgement under
 
 ## Users
 
-- 3 to 15 participants using their own phones.
+- 2 to 9 participants using their own phones in version 1.
 - One facilitator using a laptop, ideally a MacBook.
-- Optional projector or large shared display.
 
 ## Initial Roles
 
@@ -113,7 +112,7 @@ Do not score individuals. Do not keep permanent personal performance history.
 
 - Participants can join without technical help beyond displayed instructions.
 - The facilitator can run the session while speaking to the room.
-- The app supports 3 to 15 participants.
+- The app supports 2 to 9 participants in version 1.
 - HR and IT Helpdesk receive only their own private information.
 - Votes are not lost under expected use.
 - Duplicate votes are rejected.
@@ -132,5 +131,4 @@ Do not score individuals. Do not keep permanent personal performance history.
 - Anonymous result export.
 - A second small scenario.
 - Additional roles through scenario content.
-- Public HTTPS demo after ownership and publication permission are clear.
-- Local-network fallback after real-device testing.
+- Public HTTPS demo or local-device demo, choosing whichever is easier to rehearse first.

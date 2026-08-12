@@ -13,6 +13,11 @@
 - Shared organisational metrics are Incident Control, Evidence Quality, Business Continuity, and Employee Trust.
 - Public repository publication is not approved yet.
 - No deployment should happen during foundation setup.
+- Personal-device demonstration is permitted.
+- Version 1 should support 2 to 9 participants.
+- The first version does not need a projector-specific view.
+- The first version does not need anonymous result export.
+- The facilitator may shut down the session manually; automatic expiration can stay simple.
 
 ## Assumed
 
@@ -28,19 +33,15 @@
 - Whether work created during the internship may be published on a personal GitHub profile.
 - Whether the company owns any part of the project or code.
 - Whether the company name or internship can be mentioned publicly.
-- Whether personal devices may be used in a demonstration.
-- Whether a public HTTPS demo is permitted.
-- Whether a local private network, spare phone hotspot, or travel router is permitted.
-- Whether anonymous result export is useful in version 1.
-- Whether a projector-specific view is needed for the first demo.
-- Final session expiration duration.
-- Final room capacity hard limit.
+- Whether public HTTPS or local-device demo is easier for the first real rehearsal.
+- Whether a local private network, spare phone hotspot, or travel router is useful after the easiest first demo path is chosen.
+- Exact simple cleanup behaviour after the facilitator ends a session.
 
 ## Networking Notes
 
-Primary likely path: public HTTPS single-instance demo, if permitted. This avoids dependence on company Wi-Fi and allows phones to use mobile data.
+First-demo path: choose whichever is easiest to rehearse safely, public HTTPS or local-device/network demo. Do not make the choice permanent yet.
 
-Fallback path: local private network from the facilitator laptop. This must be tested with near-target participant count before any live presentation.
+Local-device/network path: a local private network from the facilitator laptop may be useful, but it must be tested with near-target participant count before any live presentation.
 
 The primary development path must not depend on company Wi-Fi.
 

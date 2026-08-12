@@ -72,7 +72,7 @@ Six participants:
 - Use majority vote by role.
 - Resolve ties through facilitator-led discussion.
 
-Approximately fifteen participants:
+Nine participants:
 
 - Uneven role splits are allowed.
 - Watch for one role dominating the room.

@@ -2,7 +2,7 @@
 
 ## Project Purpose
 
-Incident Bridge is a small browser-based, facilitator-led cybersecurity tabletop exercise for 3 to 15 participants. Prefer simple implementations appropriate for a single-instance concept demonstration.
+Incident Bridge is a small browser-based, facilitator-led cybersecurity tabletop exercise for 2 to 9 participants in version 1. Prefer simple implementations appropriate for a single-instance concept demonstration.
 
 The first scenario supports HR and IT Helpdesk. The engine must remain data-driven enough that future roles can be added through content changes rather than rewritten multiplayer logic.
 

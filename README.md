@@ -10,7 +10,7 @@ Traditional awareness presentations can explain good practice, but they rarely l
 
 ## Initial Experience
 
-- 3 to 15 participants use phones.
+- 2 to 9 participants use phones in version 1.
 - One facilitator uses a laptop and may project the room view.
 - Initial roles are HR and IT Helpdesk.
 - The first scenario is "The Friday Pay Run", a fictional payroll-phishing and account-compromise exercise.
@@ -56,4 +56,4 @@ The next approved development work should validate the scenario format and prepa
 - This is not production-ready.
 - No live multiplayer implementation exists yet.
 - Public release, company affiliation, and ownership must be clarified before publication.
-- Deployment and local networking decisions are deliberately unresolved.
+- Deployment and local networking decisions are deliberately unresolved; the first demo should use whichever route is easiest to rehearse safely.

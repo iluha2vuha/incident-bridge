@@ -121,11 +121,11 @@ Preferred future path:
 
 1. Localhost development.
 2. Static fake-data prototype.
-3. Public single-instance HTTPS demo if permitted.
-4. Local-network fallback test.
+3. First rehearsed demo route, choosing public HTTPS or local-device/network based on ease.
+4. Secondary route only if useful.
 5. Full multi-device rehearsal.
 
-Version 1 should run as a single backend instance because in-memory sessions do not support horizontal scaling.
+Version 1 should run as a single backend instance because in-memory sessions do not support horizontal scaling. The first participant cap is 9.
 
 ## Known Version 1 Limitations
 
