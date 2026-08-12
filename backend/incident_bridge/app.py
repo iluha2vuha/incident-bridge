@@ -20,6 +20,9 @@ from incident_bridge.sessions import (
     JoinSessionRequest,
     JoinSessionResponse,
     LobbySnapshot,
+    ReconnectSessionRequest,
+    ReconnectSessionResponse,
+    ResolveTieRequest,
     RoundSnapshot,
     SelectRoleRequest,
     SessionError,
@@ -194,6 +197,17 @@ def create_app(
         await hub.broadcast(snapshot)
         return snapshot
 
+    @app.post("/api/sessions/{session_id}/reconnect", response_model=ReconnectSessionResponse)
+    async def reconnect_session(
+        session_id: str,
+        request: ReconnectSessionRequest,
+    ) -> ReconnectSessionResponse:
+        return manager.reconnect_session(
+            session_id,
+            facilitator_token=request.facilitator_token,
+            participant_token=request.participant_token,
+        )
+
     @app.post("/api/sessions/{session_id}/round/open", response_model=RoundSnapshot)
     async def open_round(session_id: str, request: FacilitatorTokenRequest) -> RoundSnapshot:
         snapshot = manager.open_round(session_id, request.facilitator_token)
@@ -228,6 +242,15 @@ def create_app(
         lobby = manager.lobby_for_token(session_id, facilitator_token=request.facilitator_token)
         await hub.broadcast(lobby)
         return snapshot
+
+    @app.post("/api/sessions/{session_id}/tie/resolve", response_model=RoundSnapshot)
+    async def resolve_tie(session_id: str, request: ResolveTieRequest) -> RoundSnapshot:
+        return manager.resolve_tie(
+            session_id,
+            facilitator_token=request.facilitator_token,
+            role_id=request.role_id,
+            choice_id=request.choice_id,
+        )
 
     @app.post("/api/sessions/{session_id}/round/reveal", response_model=RoundSnapshot)
     async def reveal_round(session_id: str, request: FacilitatorTokenRequest) -> RoundSnapshot:

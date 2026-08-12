@@ -173,6 +173,24 @@ class SubmitVoteRequest(BaseModel):
     choice_id: str = Field(min_length=1)
 
 
+class ReconnectSessionRequest(BaseModel):
+    facilitator_token: Optional[str] = None
+    participant_token: Optional[str] = None
+
+
+class ReconnectSessionResponse(BaseModel):
+    actor: Literal["facilitator", "participant"]
+    participant_id: Optional[str] = None
+    participant_name: Optional[str] = None
+    lobby: LobbySnapshot
+
+
+class ResolveTieRequest(BaseModel):
+    facilitator_token: str
+    role_id: str = Field(min_length=1)
+    choice_id: str = Field(min_length=1)
+
+
 class RoundChoiceView(BaseModel):
     id: str
     label: str
@@ -295,6 +313,7 @@ class GameSession:
     participants: dict[str, Participant] = field(default_factory=dict)
     current_round_id: Optional[str] = None
     votes: dict[str, AcceptedVote] = field(default_factory=dict)
+    tie_resolutions: dict[str, str] = field(default_factory=dict)
     round_result: Optional[RoundResult] = None
     flags: set[str] = field(default_factory=set)
     metric_values: dict[str, int] = field(default_factory=dict)
@@ -536,6 +555,7 @@ class SessionManager:
         if session.current_round_id is None:
             session.current_round_id = self._round_ids(session)[0]
             session.votes.clear()
+            session.tie_resolutions.clear()
             session.round_result = None
 
         if session.phase == "briefing":
@@ -636,6 +656,7 @@ class SessionManager:
                 votes=list(session.votes.values()),
                 metric_values=session.metric_values,
                 flags=session.flags,
+                tie_resolutions=session.tie_resolutions,
             )
         except GameEngineError as error:
             raise self._session_error_from_engine_error(error) from error
@@ -709,9 +730,72 @@ class SessionManager:
 
         session.current_round_id = round_ids[current_index + 1]
         session.votes.clear()
+        session.tie_resolutions.clear()
         session.round_result = None
         self._transition_session(session, "briefing")
         return self._round_snapshot(session, self._current_round(session), None)
+
+    def reconnect_session(
+        self,
+        session_id: str,
+        *,
+        facilitator_token: Optional[str] = None,
+        participant_token: Optional[str] = None,
+    ) -> ReconnectSessionResponse:
+        session = self._session(session_id)
+        self._ensure_not_expired(session)
+
+        if facilitator_token:
+            self._ensure_facilitator(session, facilitator_token)
+            return ReconnectSessionResponse(actor="facilitator", lobby=session.snapshot())
+
+        if participant_token:
+            participant = self._participant_for_token(session, participant_token)
+            return ReconnectSessionResponse(
+                actor="participant",
+                participant_id=participant.id,
+                participant_name=participant.nickname,
+                lobby=session.snapshot(),
+            )
+
+        raise SessionError(SessionErrorCode.PERMISSION_DENIED, "Permission denied.", 403)
+
+    def resolve_tie(
+        self,
+        session_id: str,
+        *,
+        facilitator_token: str,
+        role_id: str,
+        choice_id: str,
+    ) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_facilitator(session, facilitator_token)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase != "round_open":
+            raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not open.", 409)
+
+        round_ = self._current_round(session)
+
+        try:
+            choice_for_role(round_, role_id, choice_id)
+        except GameEngineError as error:
+            raise self._session_error_from_engine_error(error) from error
+
+        tied_choice_ids = self._tied_choice_ids(session, role_id)
+
+        if choice_id not in tied_choice_ids:
+            raise SessionError(
+                SessionErrorCode.INVALID_CHOICE,
+                "Tie resolution must choose one of the tied choices.",
+                400,
+            )
+
+        session.tie_resolutions[role_id] = choice_id
+        return self._round_snapshot(session, round_, None)
 
     def lobby_for_token(
         self,
@@ -807,6 +891,24 @@ class SessionManager:
             )
             for role in session.roles
         ]
+
+    def _tied_choice_ids(self, session: GameSession, role_id: str) -> set[str]:
+        counts: dict[str, int] = {}
+
+        for vote in session.votes.values():
+            if vote.role_id == role_id:
+                counts[vote.choice_id] = counts.get(vote.choice_id, 0) + 1
+
+        if not counts:
+            return set()
+
+        top_count = max(counts.values())
+        top_choices = {choice_id for choice_id, count in counts.items() if count == top_count}
+
+        if len(top_choices) < 2:
+            return set()
+
+        return top_choices
 
     def _result_view(self, session: GameSession, round_: ScenarioRound) -> RoundResultView:
         if session.round_result is None:
@@ -1014,6 +1116,9 @@ class SessionManager:
 
         if session.closed:
             raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase != "lobby":
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is already in progress.", 409)
 
         if len(session.participants) >= session.max_participants:
             raise SessionError(SessionErrorCode.ROOM_FULL, "Room is full.", 409)

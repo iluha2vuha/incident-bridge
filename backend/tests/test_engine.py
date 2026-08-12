@@ -49,6 +49,18 @@ class GameEngineTest(unittest.TestCase):
                 ],
             )
 
+    def test_tie_resolution_supplies_department_decision(self) -> None:
+        decisions = aggregate_role_decisions(
+            role_ids=["hr"],
+            votes=[
+                AcceptedVote("p1", "hr", "hr-r1-secure-contact-escalate"),
+                AcceptedVote("p2", "hr", "hr-r1-watch-for-pattern"),
+            ],
+            tie_resolutions={"hr": "hr-r1-watch-for-pattern"},
+        )
+
+        self.assertEqual(decisions["hr"].choice_id, "hr-r1-watch-for-pattern")
+
     def test_result_applies_choice_effects_interaction_rules_and_flags(self) -> None:
         result = calculate_round_result(
             scenario=self.scenario,

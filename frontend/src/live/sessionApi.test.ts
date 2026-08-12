@@ -10,6 +10,7 @@ import {
   lobbyWebSocketUrl,
   openLiveRound,
   revealLiveRound,
+  reconnectLiveSession,
   selectParticipantRole,
   startLiveSession,
   submitLiveVote,
@@ -203,6 +204,37 @@ describe('live session API helpers', () => {
       }),
     )
   })
+
+  it('reconnects a stored participant session', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        actor: 'participant',
+        participant_id: 'participant-1',
+        participant_name: 'Jordan',
+        lobby,
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const session = await reconnectLiveSession({
+      actor: 'participant',
+      sessionId: 'session-1',
+      roomCode: 'AB7K2P',
+      participantToken: 'participant-secret',
+      lobby,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/reconnect',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ participant_token: 'participant-secret' }),
+      }),
+    )
+    expect(session.participantId).toBe('participant-1')
+    expect(session.participantName).toBe('Jordan')
+  })
+
 
   it('opens the first live round', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(round))

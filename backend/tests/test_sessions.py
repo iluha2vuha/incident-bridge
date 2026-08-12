@@ -114,6 +114,32 @@ class SessionManagerTest(unittest.TestCase):
         with self.assertRaisesRegex(SessionError, "Every participant"):
             manager.start_session(session.session_id, session.facilitator_token)
 
+    def test_reconnect_restores_facilitator_and_participant_lobby_state(self) -> None:
+        manager = SessionManager()
+        session, hr_participant, _it_participant = create_started_session(manager)
+
+        facilitator = manager.reconnect_session(
+            session.session_id,
+            facilitator_token=session.facilitator_token,
+        )
+        participant = manager.reconnect_session(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+        )
+
+        self.assertEqual(facilitator.actor, "facilitator")
+        self.assertEqual(facilitator.lobby.phase, "briefing")
+        self.assertEqual(participant.actor, "participant")
+        self.assertEqual(participant.participant_id, hr_participant.participant_id)
+        self.assertEqual(participant.participant_name, "Jordan")
+
+    def test_rejects_late_join_after_start(self) -> None:
+        manager = SessionManager()
+        session, _hr_participant, _it_participant = create_started_session(manager)
+
+        with self.assertRaisesRegex(SessionError, "progress"):
+            manager.join_session(JoinSessionRequest(room_code=session.room_code, nickname="Late"))
+
     def test_opens_first_round_with_role_filtered_participant_content(self) -> None:
         manager = SessionManager()
         session, hr_participant, _it_participant = create_started_session(manager)
@@ -232,6 +258,58 @@ class SessionManagerTest(unittest.TestCase):
             )
 
         with self.assertRaisesRegex(SessionError, "tied"):
+            manager.lock_round(session.session_id, session.facilitator_token)
+
+    def test_resolves_tied_department_vote_before_lock(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [
+                ("Jordan", "hr"),
+                ("Priya", "hr"),
+                ("Morgan", "it-helpdesk"),
+            ],
+        )
+        round_snapshot = manager.open_round(session.session_id, session.facilitator_token)
+
+        for participant, choice_id in [
+            (participants[0], "hr-r1-secure-contact-escalate"),
+            (participants[1], "hr-r1-watch-for-pattern"),
+            (participants[2], "it-r1-verify-and-review"),
+        ]:
+            manager.submit_vote(
+                session.session_id,
+                participant_token=participant.participant_token,
+                round_id=round_snapshot.round_id,
+                choice_id=choice_id,
+            )
+
+        manager.resolve_tie(
+            session.session_id,
+            facilitator_token=session.facilitator_token,
+            role_id="hr",
+            choice_id="hr-r1-watch-for-pattern",
+        )
+        locked = manager.lock_round(session.session_id, session.facilitator_token)
+
+        decisions = {decision.role_id: decision.choice_id for decision in locked.result.decisions}
+        self.assertEqual(decisions["hr"], "hr-r1-watch-for-pattern")
+
+    def test_lock_rejects_missed_role_votes(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [("Jordan", "hr"), ("Morgan", "it-helpdesk")],
+        )
+        round_snapshot = manager.open_round(session.session_id, session.facilitator_token)
+        manager.submit_vote(
+            session.session_id,
+            participant_token=participants[0].participant_token,
+            round_id=round_snapshot.round_id,
+            choice_id="hr-r1-secure-contact-escalate",
+        )
+
+        with self.assertRaisesRegex(SessionError, "it-helpdesk needs at least one vote"):
             manager.lock_round(session.session_id, session.facilitator_token)
 
     def test_locks_aggregates_and_reveals_first_round_result(self) -> None:

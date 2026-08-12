@@ -22,6 +22,13 @@ type JoinSessionResponse = {
   lobby: LiveLobbySnapshot
 }
 
+type ReconnectSessionResponse = {
+  actor: 'facilitator' | 'participant'
+  participant_id?: string | null
+  participant_name?: string | null
+  lobby: LiveLobbySnapshot
+}
+
 type SessionErrorBody = {
   detail?: {
     code?: string
@@ -61,6 +68,36 @@ export async function joinLiveSession(
     participantId: response.participant_id,
     participantToken: response.participant_token,
     participantName: nickname.trim(),
+    lobby: response.lobby,
+  }
+}
+
+export async function reconnectLiveSession(session: LiveSessionState): Promise<LiveSessionState> {
+  const body =
+    session.actor === 'facilitator'
+      ? { facilitator_token: session.facilitatorToken }
+      : { participant_token: session.participantToken }
+  const response = await request<ReconnectSessionResponse>(
+    `/api/sessions/${session.sessionId}/reconnect`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    },
+  )
+
+  if (response.actor === 'facilitator') {
+    return {
+      ...session,
+      actor: 'facilitator',
+      lobby: response.lobby,
+    }
+  }
+
+  return {
+    ...session,
+    actor: 'participant',
+    participantId: response.participant_id ?? session.participantId,
+    participantName: response.participant_name ?? session.participantName,
     lobby: response.lobby,
   }
 }

@@ -97,6 +97,22 @@ class AppTest(unittest.TestCase):
         self.assertEqual(locked_response.status_code, 409)
         self.assertEqual(locked_response.json()["detail"]["code"], "role_selection_locked")
 
+        late_join = self.client.post(
+            "/api/sessions/join",
+            json={"room_code": created["room_code"], "nickname": "Late"},
+        )
+
+        self.assertEqual(late_join.status_code, 409)
+
+        reconnect = self.client.post(
+            f"/api/sessions/{created['session_id']}/reconnect",
+            json={"participant_token": hr_join["participant_token"]},
+        )
+
+        self.assertEqual(reconnect.status_code, 200)
+        self.assertEqual(reconnect.json()["actor"], "participant")
+        self.assertEqual(reconnect.json()["participant_id"], hr_join["participant_id"])
+
     def test_first_live_round_flow(self) -> None:
         created, hr_join, it_join = self.create_started_session()
 
@@ -197,6 +213,58 @@ class AppTest(unittest.TestCase):
         self.assertGreaterEqual(len(debrief["learning_points"]), 5)
         self.assertGreaterEqual(len(debrief["discussion_questions"]), 10)
 
+    def test_resolve_tie_endpoint_allows_lock(self) -> None:
+        created, hr_join, it_join = self.create_started_session(
+            extra_participants=[("Priya", "hr")],
+        )
+
+        open_response = self.client.post(
+            f"/api/sessions/{created['session_id']}/round/open",
+            json={"facilitator_token": created["facilitator_token"]},
+        )
+        opened = open_response.json()
+        priya = created["extra_participants"][0]
+
+        for participant, choice_id in [
+            (hr_join, "hr-r1-secure-contact-escalate"),
+            (priya, "hr-r1-watch-for-pattern"),
+            (it_join, "it-r1-verify-and-review"),
+        ]:
+            self.client.post(
+                f"/api/sessions/{created['session_id']}/vote",
+                json={
+                    "participant_token": participant["participant_token"],
+                    "round_id": opened["round_id"],
+                    "choice_id": choice_id,
+                },
+            )
+
+        tied_lock = self.client.post(
+            f"/api/sessions/{created['session_id']}/round/lock",
+            json={"facilitator_token": created["facilitator_token"]},
+        )
+
+        self.assertEqual(tied_lock.status_code, 409)
+        self.assertEqual(tied_lock.json()["detail"]["code"], "tie_requires_resolution")
+
+        resolve = self.client.post(
+            f"/api/sessions/{created['session_id']}/tie/resolve",
+            json={
+                "facilitator_token": created["facilitator_token"],
+                "role_id": "hr",
+                "choice_id": "hr-r1-watch-for-pattern",
+            },
+        )
+
+        self.assertEqual(resolve.status_code, 200)
+
+        locked = self.client.post(
+            f"/api/sessions/{created['session_id']}/round/lock",
+            json={"facilitator_token": created["facilitator_token"]},
+        )
+
+        self.assertEqual(locked.status_code, 200)
+
     def test_join_reports_controlled_errors(self) -> None:
         invalid_room = self.client.post(
             "/api/sessions/join",
@@ -256,7 +324,10 @@ class AppTest(unittest.TestCase):
             self.assertEqual(role_message["type"], "lobby:updated")
             self.assertEqual(role_message["lobby"]["role_counts"]["it-helpdesk"], 1)
 
-    def create_started_session(self) -> tuple[dict, dict, dict]:
+    def create_started_session(
+        self,
+        extra_participants: list[tuple[str, str]] | None = None,
+    ) -> tuple[dict, dict, dict]:
         create_response = self.client.post(
             "/api/sessions",
             json={"scenario_id": "friday-pay-run", "mode": "standard"},
@@ -278,10 +349,24 @@ class AppTest(unittest.TestCase):
             f"/api/sessions/{created['session_id']}/role",
             json={"participant_token": it_join["participant_token"], "role_id": "it-helpdesk"},
         )
+        extras = []
+
+        for nickname, role_id in extra_participants or []:
+            joined = self.client.post(
+                "/api/sessions/join",
+                json={"room_code": created["room_code"], "nickname": nickname},
+            ).json()
+            self.client.post(
+                f"/api/sessions/{created['session_id']}/role",
+                json={"participant_token": joined["participant_token"], "role_id": role_id},
+            )
+            extras.append(joined)
+
         self.client.post(
             f"/api/sessions/{created['session_id']}/start",
             json={"facilitator_token": created["facilitator_token"]},
         )
+        created["extra_participants"] = extras
         return created, hr_join, it_join
 
 

@@ -85,9 +85,9 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 12 - Reconnection / Error Handling
 
-- [ ] Restore participant state after refresh.
-- [ ] Restore facilitator state after refresh.
-- [ ] Handle closed sessions, late joins, missed votes, ties, and disconnects.
+- [x] Restore participant state after refresh.
+- [x] Restore facilitator state after refresh.
+- [x] Handle closed sessions, late joins, missed votes, ties, and disconnects.
 
 ## Phase 13 - Deployment
 

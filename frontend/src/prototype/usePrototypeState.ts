@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type {
   ChoiceStep,
   ConnectionState,
@@ -12,6 +12,8 @@ import type {
 } from '../domain/model'
 import { roles } from '../mocks/scenario'
 import { buildFacilitatorSnapshot, buildParticipantSnapshot } from '../mocks/snapshots'
+
+const LIVE_SESSION_STORAGE_KEY = 'incident-bridge-live-session'
 
 export function usePrototypeState() {
   const [role, setRole] = useState<RoleId>('hr')
@@ -37,6 +39,23 @@ export function usePrototypeState() {
       return { ...current, lobby }
     })
   }, [])
+
+  useEffect(() => {
+    const savedSession = readStoredLiveSession()
+
+    if (savedSession) {
+      setLiveSession(savedSession)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (liveSession) {
+      window.localStorage.setItem(LIVE_SESSION_STORAGE_KEY, JSON.stringify(liveSession))
+      return
+    }
+
+    window.localStorage.removeItem(LIVE_SESSION_STORAGE_KEY)
+  }, [liveSession])
 
   return {
     role,
@@ -65,3 +84,18 @@ export function usePrototypeState() {
 }
 
 export type PrototypeState = ReturnType<typeof usePrototypeState>
+
+function readStoredLiveSession(): LiveSessionState | null {
+  try {
+    const rawSession = window.localStorage.getItem(LIVE_SESSION_STORAGE_KEY)
+
+    if (!rawSession) {
+      return null
+    }
+
+    return JSON.parse(rawSession) as LiveSessionState
+  } catch {
+    window.localStorage.removeItem(LIVE_SESSION_STORAGE_KEY)
+    return null
+  }
+}

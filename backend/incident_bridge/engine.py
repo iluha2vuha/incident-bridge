@@ -82,8 +82,10 @@ def aggregate_role_decisions(
     *,
     role_ids: list[str],
     votes: list[AcceptedVote],
+    tie_resolutions: dict[str, str] | None = None,
 ) -> dict[str, RoundDecision]:
     decisions: dict[str, RoundDecision] = {}
+    resolutions = tie_resolutions or {}
 
     for role_id in role_ids:
         role_votes = [vote.choice_id for vote in votes if vote.role_id == role_id]
@@ -99,6 +101,12 @@ def aggregate_role_decisions(
         top_choices = [choice_id for choice_id, count in counts.items() if count == top_count]
 
         if len(top_choices) > 1:
+            resolved_choice_id = resolutions.get(role_id)
+
+            if resolved_choice_id in top_choices:
+                decisions[role_id] = RoundDecision(role_id=role_id, choice_id=resolved_choice_id)
+                continue
+
             raise GameEngineError(
                 GameEngineErrorCode.TIE_REQUIRES_RESOLUTION,
                 f"{role_id} has a tied vote.",
@@ -117,8 +125,13 @@ def calculate_round_result(
     votes: list[AcceptedVote],
     metric_values: dict[str, int],
     flags: set[str],
+    tie_resolutions: dict[str, str] | None = None,
 ) -> RoundResult:
-    decisions = aggregate_role_decisions(role_ids=role_ids, votes=votes)
+    decisions = aggregate_role_decisions(
+        role_ids=role_ids,
+        votes=votes,
+        tie_resolutions=tie_resolutions,
+    )
     metric_deltas = {metric.id: 0 for metric in scenario.metrics}
     result_flags = set(flags)
 

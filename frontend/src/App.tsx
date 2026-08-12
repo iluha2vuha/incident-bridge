@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import {
   BrowserRouter,
   Link,
@@ -43,6 +43,7 @@ import {
   lobbyWebSocketUrl,
   openLiveRound,
   revealLiveRound,
+  reconnectLiveSession,
   selectParticipantRole,
   startLiveSession,
   submitLiveVote,
@@ -68,6 +69,19 @@ function PrototypeApp() {
   const liveParticipantToken = liveSession?.participantToken
   const liveSessionId = liveSession?.sessionId
   const updateLiveLobby = state.updateLiveLobby
+  const setLiveSession = state.setLiveSession
+  const hasVerifiedLiveSession = useRef(false)
+
+  useEffect(() => {
+    if (!liveSession || hasVerifiedLiveSession.current) {
+      return
+    }
+
+    hasVerifiedLiveSession.current = true
+    reconnectLiveSession(liveSession)
+      .then(setLiveSession)
+      .catch(() => setLiveSession(null))
+  }, [liveSession, setLiveSession])
 
   useEffect(() => {
     if (!liveSessionId || !liveActor) {
