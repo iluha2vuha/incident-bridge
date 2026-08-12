@@ -1,0 +1,343 @@
+id: friday-pay-run
+version: 0.1.0-draft
+title: The Friday Pay Run
+status: paper-prototype-draft
+summary: >
+  A fictional payroll-phishing request develops into evidence of an employee
+  account compromise and possible internal phishing.
+modes:
+  quick_round_ids:
+    - r1-suspicious-payroll-request
+    - r3-suspicious-mailbox-activity
+    - r5-recovery-and-communication
+  standard_round_ids:
+    - r1-suspicious-payroll-request
+    - r2-repeated-authentication-prompts
+    - r3-suspicious-mailbox-activity
+    - r4-wider-organisational-impact
+    - r5-recovery-and-communication
+roles:
+  - id: hr
+    name: HR
+    briefing: Protect employee information, payroll continuity, employee trust, verification, escalation, and communication.
+  - id: it-helpdesk
+    name: IT Helpdesk
+    briefing: Verify identity, secure accounts, preserve evidence, contain compromise, and avoid unnecessary disruption.
+metrics:
+  - id: incident_control
+    name: Incident Control
+    minimum: 0
+    maximum: 100
+    initial_value: 50
+  - id: evidence_quality
+    name: Evidence Quality
+    minimum: 0
+    maximum: 100
+    initial_value: 50
+  - id: business_continuity
+    name: Business Continuity
+    minimum: 0
+    maximum: 100
+    initial_value: 50
+  - id: employee_trust
+    name: Employee Trust
+    minimum: 0
+    maximum: 100
+    initial_value: 50
+flags:
+  - evidence_preserved
+  - incident_escalated
+  - employee_contacted_securely
+  - sessions_revoked
+  - broad_warning_sent
+  - coordinated_response
+  - payroll_paused_for_verification
+  - mailbox_rule_captured
+  - targeted_warning_sent
+  - employee_supported
+  - recovery_documented
+rounds:
+  - id: r1-suspicious-payroll-request
+    title: The Suspicious Payroll Request
+    purpose: Connect a payroll concern with a technical warning before either role has the full picture.
+    shared_update: An employee reports an urgent message asking them to confirm payroll information before today's pay run.
+    role_information:
+      hr: The sender display name looks like a senior HR employee. The message requests personal and bank information. The employee is worried their salary may be delayed.
+      it-helpdesk: A password reset was requested for the employee earlier this morning from an unfamiliar browser. No incident has been formally reported. The account remains active.
+    choices:
+      hr:
+        - id: hr-r1-reply-for-context
+          label: Ask the employee to reply asking what details are needed, while HR checks payroll records.
+          effects: {incident_control: -8, evidence_quality: -4, business_continuity: 6, employee_trust: -6}
+        - id: hr-r1-secure-contact-escalate
+          label: Contact the employee through a trusted channel, preserve the message, and escalate the concern.
+          effects: {incident_control: 10, evidence_quality: 12, business_continuity: -3, employee_trust: 8}
+          adds_flags: [employee_contacted_securely, evidence_preserved, incident_escalated]
+        - id: hr-r1-watch-for-pattern
+          label: Hold the request until another report confirms whether this is isolated.
+          effects: {incident_control: -3, evidence_quality: 2, business_continuity: 3, employee_trust: -2}
+        - id: hr-r1-broad-warning
+          label: Send a quick all-staff warning that payroll messages may be suspicious.
+          effects: {incident_control: 4, evidence_quality: 1, business_continuity: -5, employee_trust: 1}
+          adds_flags: [broad_warning_sent]
+      it-helpdesk:
+        - id: it-r1-reset-now
+          label: Reset the password immediately and ask the employee to sign in again.
+          effects: {incident_control: 5, evidence_quality: -5, business_continuity: -4, employee_trust: -3}
+        - id: it-r1-verify-and-review
+          label: Verify the employee through an approved channel and review recent account activity.
+          effects: {incident_control: 9, evidence_quality: 10, business_continuity: -2, employee_trust: 5}
+          adds_flags: [evidence_preserved, employee_contacted_securely]
+        - id: it-r1-wait-confirmation
+          label: Wait for HR or the employee to confirm compromise before intervening.
+          effects: {incident_control: -6, evidence_quality: 1, business_continuity: 5, employee_trust: -2}
+        - id: it-r1-service-ticket-only
+          label: Log it as a routine password-reset ticket and continue normal queue handling.
+          effects: {incident_control: -4, evidence_quality: 3, business_continuity: 4, employee_trust: -1}
+    interaction_rules:
+      - id: r1-secure-shared-picture
+        when: {hr: hr-r1-secure-contact-escalate, it-helpdesk: it-r1-verify-and-review}
+        effects: {incident_control: 8, evidence_quality: 6, employee_trust: 4}
+        adds_flags: [coordinated_response]
+        result_text: HR and Helpdesk connect the payroll message and reset request early.
+      - id: r1-warning-without-containment
+        when: {hr: hr-r1-broad-warning, it-helpdesk: it-r1-wait-confirmation}
+        effects: {incident_control: -3, business_continuity: -4, employee_trust: -3}
+        result_text: The warning raises attention, but the account remains active while people ask what to do.
+    public_consequence: The report is now being treated as suspicious. The next step depends on whether HR and Helpdesk combine their information.
+    facilitator_note: Strong outcomes preserve the message, verify through trusted channels, and escalate without claiming a fictional policy is official.
+    learning_objective: Recognise connected warning signs.
+    learning_point: A business request and a technical event can be parts of one incident.
+    discussion_questions:
+      - What would each role have missed without the other role's information?
+      - What makes an urgent payroll request risky even when it looks routine?
+
+  - id: r2-repeated-authentication-prompts
+    title: Repeated Authentication Prompts
+    purpose: Contain a suspected compromise while supporting the employee and preserving useful records.
+    shared_update: The employee says they received several authentication prompts during the morning.
+    role_information:
+      hr: The employee approved one prompt because they thought it related to payroll. They are embarrassed and worried they caused trouble. Payroll preparation is still in progress.
+      it-helpdesk: Several failed sign-ins were followed by one successful sign-in from a new device or location. Active sessions are still present.
+    choices:
+      hr:
+        - id: hr-r2-support-and-hold-changes
+          label: Reassure the employee, pause sensitive payroll changes for this case, and share a timeline with IT.
+          effects: {incident_control: 7, evidence_quality: 8, business_continuity: -4, employee_trust: 9}
+          adds_flags: [employee_supported, payroll_paused_for_verification, evidence_preserved]
+        - id: hr-r2-finish-payroll-first
+          label: Prioritise completing payroll, then revisit the security concern after the deadline.
+          effects: {incident_control: -8, evidence_quality: -2, business_continuity: 8, employee_trust: -5}
+        - id: hr-r2-manager-only
+          label: Ask the employee's manager to confirm whether the request is legitimate before HR acts.
+          effects: {incident_control: 1, evidence_quality: 1, business_continuity: 2, employee_trust: 1}
+        - id: hr-r2-broad-reminder
+          label: Send a general reminder not to approve unexpected prompts, without naming the employee.
+          effects: {incident_control: 3, evidence_quality: 0, business_continuity: -2, employee_trust: 2}
+          adds_flags: [broad_warning_sent]
+      it-helpdesk:
+        - id: it-r2-revoke-and-capture
+          label: Revoke active sessions, capture sign-in details, and begin account recovery.
+          effects: {incident_control: 12, evidence_quality: 10, business_continuity: -5, employee_trust: 3}
+          adds_flags: [sessions_revoked, evidence_preserved]
+        - id: it-r2-monitor-before-disrupting
+          label: Monitor the account briefly to avoid disrupting payroll unless suspicious activity continues.
+          effects: {incident_control: -4, evidence_quality: 4, business_continuity: 6, employee_trust: -1}
+        - id: it-r2-reset-without-session-review
+          label: Reset the password but leave session and sign-in review for later.
+          effects: {incident_control: 3, evidence_quality: -3, business_continuity: -2, employee_trust: 0}
+        - id: it-r2-disable-account
+          label: Disable the account until the incident-response path confirms it is safe.
+          effects: {incident_control: 10, evidence_quality: 5, business_continuity: -8, employee_trust: -2}
+          adds_flags: [sessions_revoked]
+    interaction_rules:
+      - id: r2-supported-containment
+        when: {hr: hr-r2-support-and-hold-changes, it-helpdesk: it-r2-revoke-and-capture}
+        effects: {incident_control: 8, evidence_quality: 6, employee_trust: 5}
+        adds_flags: [coordinated_response]
+        result_text: HR supports the employee while Helpdesk contains the account and preserves records.
+      - id: r2-containment-business-friction
+        when: {hr: hr-r2-finish-payroll-first, it-helpdesk: it-r2-disable-account}
+        effects: {business_continuity: -6, employee_trust: -4}
+        result_text: Helpdesk contains the account, but HR is caught by surprise during payroll work.
+    public_consequence: The authentication prompts make compromise more likely. Account access, employee support, and payroll handling now need to be coordinated.
+    facilitator_note: The discussion is about sequencing and communication, not finding a magic answer.
+    learning_objective: Verify identity before sensitive action; preserve evidence.
+    learning_point: Prompt fatigue and urgent business context can combine to create risk.
+    discussion_questions:
+      - How can HR support the employee without implying blame?
+      - When is account disruption justified despite business impact?
+
+  - id: r3-suspicious-mailbox-activity
+    title: Suspicious Mailbox Activity
+    purpose: Balance evidence preservation and rapid cleanup when persistence is discovered.
+    shared_update: A new mailbox forwarding rule has been discovered on the employee's account.
+    role_information:
+      hr: Payroll must be completed shortly. Disabling access may interrupt an important workflow. Other HR staff are asking whether normal payroll work should continue.
+      it-helpdesk: The forwarding rule sends messages outside the organisation. Recent mailbox activity suggests unauthorised access. The exposure scope is not known yet.
+    choices:
+      hr:
+        - id: hr-r3-targeted-payroll-check
+          label: Pause only sensitive changes tied to this employee and tell HR staff to verify unusual payroll requests.
+          effects: {incident_control: 6, evidence_quality: 5, business_continuity: -3, employee_trust: 5}
+          adds_flags: [payroll_paused_for_verification, targeted_warning_sent]
+        - id: hr-r3-continue-normal
+          label: Continue payroll normally until IT confirms actual data exposure.
+          effects: {incident_control: -6, evidence_quality: -2, business_continuity: 8, employee_trust: -4}
+        - id: hr-r3-stop-all-payroll
+          label: Stop all payroll processing until the mailbox issue is fully understood.
+          effects: {incident_control: 7, evidence_quality: 3, business_continuity: -10, employee_trust: -3}
+        - id: hr-r3-broad-payroll-alert
+          label: Warn all employees that payroll-related messages may be suspicious.
+          effects: {incident_control: 5, evidence_quality: 1, business_continuity: -5, employee_trust: 1}
+          adds_flags: [broad_warning_sent]
+      it-helpdesk:
+        - id: it-r3-capture-remove-rule
+          label: Capture details of the rule, remove it, and review mailbox access.
+          effects: {incident_control: 11, evidence_quality: 11, business_continuity: -3, employee_trust: 3}
+          adds_flags: [mailbox_rule_captured, evidence_preserved]
+        - id: it-r3-delete-rule-fast
+          label: Delete the rule immediately and focus on restoring normal access.
+          effects: {incident_control: 7, evidence_quality: -7, business_continuity: 1, employee_trust: 1}
+        - id: it-r3-keep-rule-monitor
+          label: Leave the rule briefly while monitoring to learn more about the activity.
+          effects: {incident_control: -7, evidence_quality: 5, business_continuity: 2, employee_trust: -4}
+        - id: it-r3-disable-mailbox
+          label: Disable mailbox access while preserving logs and investigating.
+          effects: {incident_control: 10, evidence_quality: 8, business_continuity: -8, employee_trust: -2}
+          adds_flags: [sessions_revoked, evidence_preserved]
+    interaction_rules:
+      - id: r3-targeted-and-captured
+        when: {hr: hr-r3-targeted-payroll-check, it-helpdesk: it-r3-capture-remove-rule}
+        effects: {incident_control: 7, evidence_quality: 6, business_continuity: 2, employee_trust: 4}
+        adds_flags: [coordinated_response]
+        result_text: HR keeps payroll controls targeted while Helpdesk captures and removes the forwarding rule.
+      - id: r3-all-stop-and-disable
+        when: {hr: hr-r3-stop-all-payroll, it-helpdesk: it-r3-disable-mailbox}
+        effects: {incident_control: 5, business_continuity: -8, employee_trust: -5}
+        result_text: Containment is strong, but the operational impact is immediate.
+    public_consequence: The mailbox rule confirms the incident is no longer just suspicious. The response now affects payroll continuity and the investigation trail.
+    facilitator_note: Broad or total pauses can be justified, but they have trust and continuity costs.
+    learning_objective: Balance containment, evidence, continuity, and trust.
+    learning_point: Cleanup is not the same as containment if useful evidence disappears.
+    discussion_questions:
+      - What should be preserved before removing suspicious mailbox artefacts?
+      - How targeted can HR's pause be without leaving payroll exposed?
+
+  - id: r4-wider-organisational-impact
+    title: Wider Organisational Impact
+    purpose: Coordinate technical scope and employee communication as the incident spreads.
+    shared_update: Another employee reports receiving a similar message from the affected account.
+    role_information:
+      hr: Employees are asking whether payroll information has been exposed. A rushed all-staff message may create panic, but silence may damage trust.
+      it-helpdesk: The compromised account may have sent messages to several internal recipients. The full recipient list is still being investigated. Additional accounts may be at risk.
+    choices:
+      hr:
+        - id: hr-r4-targeted-comms
+          label: Prepare a targeted employee message with verified facts and escalation instructions.
+          effects: {incident_control: 5, evidence_quality: 3, business_continuity: -2, employee_trust: 8}
+          adds_flags: [targeted_warning_sent]
+        - id: hr-r4-all-staff-warning
+          label: Send an immediate all-staff warning that payroll messages may be fraudulent.
+          effects: {incident_control: 7, evidence_quality: 1, business_continuity: -6, employee_trust: 2}
+          adds_flags: [broad_warning_sent]
+        - id: hr-r4-wait-for-full-scope
+          label: Wait for IT to confirm the full recipient list before communicating.
+          effects: {incident_control: -5, evidence_quality: 2, business_continuity: 4, employee_trust: -5}
+        - id: hr-r4-answer-individually
+          label: Respond only to employees who ask questions, keeping public messaging limited.
+          effects: {incident_control: -3, evidence_quality: 1, business_continuity: 2, employee_trust: -2}
+      it-helpdesk:
+        - id: it-r4-scope-and-escalate
+          label: Escalate through the incident process, identify recipients, and prioritise risky follow-up activity.
+          effects: {incident_control: 11, evidence_quality: 9, business_continuity: -3, employee_trust: 4}
+          adds_flags: [incident_escalated, evidence_preserved]
+        - id: it-r4-block-similar-messages
+          label: Add temporary controls to reduce similar messages while investigation continues.
+          effects: {incident_control: 8, evidence_quality: 2, business_continuity: -4, employee_trust: 2}
+        - id: it-r4-wait-complete-logs
+          label: Delay action until logs are complete enough to avoid false positives.
+          effects: {incident_control: -7, evidence_quality: 4, business_continuity: 4, employee_trust: -4}
+        - id: it-r4-bulk-reset-at-risk
+          label: Reset credentials for all potentially affected recipients immediately.
+          effects: {incident_control: 9, evidence_quality: 3, business_continuity: -9, employee_trust: -3}
+          adds_flags: [sessions_revoked]
+    interaction_rules:
+      - id: r4-verified-targeted-response
+        when: {hr: hr-r4-targeted-comms, it-helpdesk: it-r4-scope-and-escalate}
+        effects: {incident_control: 8, evidence_quality: 4, employee_trust: 7}
+        adds_flags: [coordinated_response]
+        result_text: Communication and technical scoping support each other.
+      - id: r4-silence-and-wait
+        when: {hr: hr-r4-wait-for-full-scope, it-helpdesk: it-r4-wait-complete-logs}
+        effects: {incident_control: -8, employee_trust: -6}
+        result_text: The teams avoid false alarms, but the incident has more time to spread.
+    public_consequence: The incident is now visible beyond one employee. Communication and technical scoping need to move together.
+    facilitator_note: The exercise should surface what facts are needed and why silence can itself create harm.
+    learning_objective: Coordinate business and technical responses.
+    learning_point: Communication should be timely, factual, and linked to the response process.
+    discussion_questions:
+      - What facts are needed before sending a wider warning?
+      - How can technical scoping and employee communication support each other?
+
+  - id: r5-recovery-and-communication
+    title: Recovery And Communication
+    purpose: Finish recovery while preserving accountability, learning, continuity, and employee trust.
+    shared_update: The immediate threat is being contained. The organisation now needs to recover, communicate, and learn from the incident.
+    role_information:
+      hr: The affected employee needs support. Payroll checks still need confirmation. Wording that blames one person could reduce future reporting.
+      it-helpdesk: Unauthorised sessions need confirmation, mailbox rules need final review, and technical actions should be documented.
+    choices:
+      hr:
+        - id: hr-r5-support-confirm-communicate
+          label: Support the employee, confirm sensitive payroll actions, and send a factual update through approved channels.
+          effects: {incident_control: 5, evidence_quality: 3, business_continuity: 3, employee_trust: 10}
+          adds_flags: [employee_supported, targeted_warning_sent]
+        - id: hr-r5-quiet-closeout
+          label: Keep communication minimal to avoid extending anxiety once the account is contained.
+          effects: {incident_control: -2, evidence_quality: 1, business_continuity: 5, employee_trust: -5}
+        - id: hr-r5-speed-payroll-catchup
+          label: Focus on catching up payroll work and leave incident follow-up to IT.
+          effects: {incident_control: -4, evidence_quality: -2, business_continuity: 8, employee_trust: -4}
+        - id: hr-r5-formal-lessons
+          label: Schedule a lessons-learned discussion with HR and IT, but delay employee messaging.
+          effects: {incident_control: 3, evidence_quality: 4, business_continuity: -2, employee_trust: -2}
+          adds_flags: [recovery_documented]
+      it-helpdesk:
+        - id: it-r5-complete-recovery-records
+          label: Confirm session revocation, remove persistence, restore secure access, and document actions.
+          effects: {incident_control: 10, evidence_quality: 8, business_continuity: 2, employee_trust: 4}
+          adds_flags: [sessions_revoked, recovery_documented, evidence_preserved]
+        - id: it-r5-restore-fast
+          label: Restore access quickly after password reset and handle documentation later.
+          effects: {incident_control: 3, evidence_quality: -4, business_continuity: 8, employee_trust: 1}
+        - id: it-r5-extra-lockdown
+          label: Keep access restricted until every related account is reviewed.
+          effects: {incident_control: 8, evidence_quality: 5, business_continuity: -8, employee_trust: -3}
+          adds_flags: [sessions_revoked]
+        - id: it-r5-technical-only-close
+          label: Close the ticket once technical indicators are removed.
+          effects: {incident_control: 1, evidence_quality: -2, business_continuity: 5, employee_trust: -3}
+    interaction_rules:
+      - id: r5-supported-documented-recovery
+        when: {hr: hr-r5-support-confirm-communicate, it-helpdesk: it-r5-complete-recovery-records}
+        effects: {incident_control: 7, evidence_quality: 5, business_continuity: 3, employee_trust: 8}
+        adds_flags: [coordinated_response]
+        result_text: Recovery combines employee support, payroll confidence, secure access, and documentation.
+      - id: r5-fast-but-thin
+        when: {hr: hr-r5-speed-payroll-catchup, it-helpdesk: it-r5-restore-fast}
+        effects: {business_continuity: 4, evidence_quality: -6, employee_trust: -4}
+        result_text: Normal work resumes quickly, but the debrief has gaps.
+    public_consequence: The incident is ending, but the final impression depends on recovery, documentation, and employee communication.
+    facilitator_note: Recovery is a people process as well as a technical process.
+    learning_objective: Balance containment, continuity, evidence, and trust.
+    learning_point: A good incident response ends with recovery, documentation, and learning, not just removing the visible threat.
+    discussion_questions:
+      - What should be documented before calling the incident closed?
+      - How can communication encourage future reporting instead of blame?
+final_debrief:
+  - Which role had information the other role needed?
+  - Which choices improved one metric while harming another?
+  - Where did the group prioritise speed over certainty?
+  - Where did the group protect evidence before cleanup?
+  - How would participants map the lessons to their organisation's approved reporting, verification, and incident-response procedures?
