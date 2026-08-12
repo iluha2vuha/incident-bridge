@@ -155,6 +155,85 @@ class SessionManagerTest(unittest.TestCase):
                 choice_id="hr-r1-watch-for-pattern",
             )
 
+    def test_rejects_stale_round_id_and_invalid_choice(self) -> None:
+        manager = SessionManager()
+        session, hr_participant, _it_participant = create_started_session(manager)
+        manager.open_round(session.session_id, session.facilitator_token)
+
+        with self.assertRaisesRegex(SessionError, "stale"):
+            manager.submit_vote(
+                session.session_id,
+                participant_token=hr_participant.participant_token,
+                round_id="old-round",
+                choice_id="hr-r1-secure-contact-escalate",
+            )
+
+        with self.assertRaisesRegex(SessionError, "Choice"):
+            manager.submit_vote(
+                session.session_id,
+                participant_token=hr_participant.participant_token,
+                round_id="r1-suspicious-payroll-request",
+                choice_id="it-r1-verify-and-review",
+            )
+
+    def test_majority_vote_wins_department_decision(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [
+                ("Jordan", "hr"),
+                ("Priya", "hr"),
+                ("Taylor", "hr"),
+                ("Morgan", "it-helpdesk"),
+            ],
+        )
+        round_snapshot = manager.open_round(session.session_id, session.facilitator_token)
+
+        for participant, choice_id in [
+            (participants[0], "hr-r1-secure-contact-escalate"),
+            (participants[1], "hr-r1-secure-contact-escalate"),
+            (participants[2], "hr-r1-watch-for-pattern"),
+            (participants[3], "it-r1-verify-and-review"),
+        ]:
+            manager.submit_vote(
+                session.session_id,
+                participant_token=participant.participant_token,
+                round_id=round_snapshot.round_id,
+                choice_id=choice_id,
+            )
+
+        locked = manager.lock_round(session.session_id, session.facilitator_token)
+
+        decisions = {decision.role_id: decision.choice_id for decision in locked.result.decisions}
+        self.assertEqual(decisions["hr"], "hr-r1-secure-contact-escalate")
+
+    def test_tied_department_vote_requires_resolution_before_lock(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [
+                ("Jordan", "hr"),
+                ("Priya", "hr"),
+                ("Morgan", "it-helpdesk"),
+            ],
+        )
+        round_snapshot = manager.open_round(session.session_id, session.facilitator_token)
+
+        for participant, choice_id in [
+            (participants[0], "hr-r1-secure-contact-escalate"),
+            (participants[1], "hr-r1-watch-for-pattern"),
+            (participants[2], "it-r1-verify-and-review"),
+        ]:
+            manager.submit_vote(
+                session.session_id,
+                participant_token=participant.participant_token,
+                round_id=round_snapshot.round_id,
+                choice_id=choice_id,
+            )
+
+        with self.assertRaisesRegex(SessionError, "tied"):
+            manager.lock_round(session.session_id, session.facilitator_token)
+
     def test_locks_aggregates_and_reveals_first_round_result(self) -> None:
         manager = SessionManager()
         session, hr_participant, it_participant = create_started_session(manager)
@@ -181,6 +260,9 @@ class SessionManagerTest(unittest.TestCase):
         metric_deltas = {metric.id: metric.delta for metric in locked.result.metric_deltas}
         self.assertEqual(metric_deltas["incident_control"], 27)
         self.assertEqual(metric_deltas["evidence_quality"], 28)
+        metric_values = {metric.id: metric.value for metric in locked.result.metric_deltas}
+        self.assertLessEqual(metric_values["incident_control"], 100)
+        self.assertLessEqual(metric_values["evidence_quality"], 100)
 
         participant_locked = manager.round_for_token(
             session.session_id,
@@ -270,6 +352,28 @@ def create_started_session(
     )
     manager.start_session(session.session_id, session.facilitator_token)
     return session, hr_participant, it_participant
+
+
+def create_started_session_with_roles(
+    manager: SessionManager,
+    participant_specs: list[tuple[str, str]],
+) -> tuple[object, list[object]]:
+    session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+    participants = []
+
+    for nickname, role_id in participant_specs:
+        participant = manager.join_session(
+            JoinSessionRequest(room_code=session.room_code, nickname=nickname),
+        )
+        manager.select_role(
+            session.session_id,
+            participant_token=participant.participant_token,
+            role_id=role_id,
+        )
+        participants.append(participant)
+
+    manager.start_session(session.session_id, session.facilitator_token)
+    return session, participants
 
 
 if __name__ == "__main__":

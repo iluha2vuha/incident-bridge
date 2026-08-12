@@ -69,8 +69,8 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 9 - Generic Game Engine
 
-- [ ] Extract state machine, vote aggregation, metric effects, flags, and interaction rules.
-- [ ] Add tests for majority, ties, duplicate votes, invalid transitions, and metric bounds.
+- [x] Extract state machine, vote aggregation, metric effects, flags, and interaction rules.
+- [x] Add tests for majority, ties, duplicate votes, invalid transitions, and metric bounds.
 
 ## Phase 10 - Full Scenario
 
