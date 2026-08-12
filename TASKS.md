@@ -10,10 +10,10 @@
 
 ## Phase 1 - Scenario Validation
 
-- [ ] Convert approved scenario structure into a strict JSON draft.
-- [ ] Define Pydantic and TypeScript scenario shapes.
-- [ ] Add validation rules for roles, metrics, choices, flags, quick-mode rounds, and interaction rules.
-- [ ] Add tests for invalid and valid scenario content.
+- [x] Convert approved scenario structure into a strict JSON draft.
+- [x] Define Pydantic and TypeScript scenario shapes.
+- [x] Add validation rules for roles, metrics, choices, flags, quick-mode rounds, and interaction rules.
+- [x] Add tests for invalid and valid scenario content.
 
 ## Phase 2 - Paper Prototype
 
