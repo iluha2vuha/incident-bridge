@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -91,7 +92,12 @@ def create_app(
     session_manager: Optional[SessionManager] = None,
     lobby_hub: Optional[LobbyHub] = None,
 ) -> FastAPI:
-    manager = session_manager or SessionManager()
+    public_frontend_url = os.getenv("INCIDENT_BRIDGE_PUBLIC_FRONTEND_URL")
+    manager = session_manager or SessionManager(
+        join_url_base=f"{public_frontend_url}/participant/join"
+        if public_frontend_url
+        else "http://localhost:5173/participant/join",
+    )
     hub = lobby_hub or LobbyHub()
 
     app = FastAPI(
@@ -101,7 +107,7 @@ def create_app(
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_origins=configured_cors_origins(public_frontend_url),
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -323,6 +329,22 @@ def create_app(
 def load_default_scenario() -> ScenarioDraft:
     payload = json.loads(DEFAULT_SCENARIO_PATH.read_text(encoding="utf-8"))
     return ScenarioDraft.model_validate(payload)
+
+
+def configured_cors_origins(public_frontend_url: Optional[str]) -> list[str]:
+    origins = {"http://localhost:5173", "http://127.0.0.1:5173"}
+    extra_origins = os.getenv("INCIDENT_BRIDGE_CORS_ORIGINS", "")
+
+    if public_frontend_url:
+        origins.add(public_frontend_url.rstrip("/"))
+
+    for origin in extra_origins.split(","):
+        stripped_origin = origin.strip().rstrip("/")
+
+        if stripped_origin:
+            origins.add(stripped_origin)
+
+    return sorted(origins)
 
 
 app = create_app()

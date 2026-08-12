@@ -19,6 +19,8 @@ class SessionManagerTest(unittest.TestCase):
         self.assertEqual(len(response.room_code), 6)
         self.assertGreater(len(response.facilitator_token), 30)
         self.assertIn(response.room_code, response.join_url)
+        self.assertIn("<svg", response.join_qr_svg)
+        self.assertIn("<path", response.join_qr_svg)
         self.assertEqual(response.lobby.participant_count, 0)
         self.assertEqual(response.lobby.role_counts, {"hr": 0, "it-helpdesk": 0})
 

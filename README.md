@@ -2,7 +2,7 @@
 
 Incident Bridge is a concept demonstration for a facilitator-led, multiplayer cybersecurity tabletop exercise. Participants use their phones to join a temporary room, choose a department role, receive role-specific information, vote on decisions during a fictional incident, and review the organisational consequences with a facilitator.
 
-Current status: technical skeleton. The repository contains validated scenario content, a React/TypeScript/Vite prototype frontend, and a small FastAPI backend skeleton. Live multiplayer gameplay is not implemented yet.
+Current status: local concept demo. The repository contains validated scenario content, a React/TypeScript/Vite frontend, and a FastAPI backend with in-memory live sessions, role selection, voting, round progression, reconnection, and debrief support.
 
 ## Why It Exists
 
@@ -66,6 +66,9 @@ make backend-dev
 make frontend-dev
 ```
 
+For phone testing or rehearsal across devices, see `docs/DEMO_ROUTE.md`. Localhost URLs work only
+on the facilitator laptop; participant phones need a tunnel URL or the laptop's LAN IP.
+
 Run validation, tests, linting, and formatting:
 
 ```sh
@@ -85,12 +88,12 @@ python3 scripts/validate_scenario.py
 
 ## Roadmap
 
-See `TASKS.md` for the ordered backlog. The next application phase is the static fake-data interface before live room creation, joining, role selection, and voting.
+See `TASKS.md` for the ordered backlog.
 
 ## Limitations
 
 - This is not production-ready.
-- No live multiplayer implementation exists yet.
-- The FastAPI backend is a technical skeleton only.
+- Active sessions are in memory and are lost when the backend restarts.
+- Multi-device rehearsal is still required before any facilitated demo.
 - Public release, company affiliation, and ownership must be clarified before publication.
 - Deployment and local networking decisions are deliberately unresolved; the first demo should use whichever route is easiest to rehearse safely.

@@ -104,6 +104,7 @@ describe('live session API helpers', () => {
         room_code: 'AB7K2P',
         facilitator_token: 'facilitator-secret',
         join_url: 'http://localhost:5173/participant/join?room=AB7K2P',
+        join_qr_svg: '<svg />',
         lobby,
       }),
     )
@@ -121,6 +122,7 @@ describe('live session API helpers', () => {
     expect(session.actor).toBe('facilitator')
     expect(session.facilitatorToken).toBe('facilitator-secret')
     expect(session.lobby.room_code).toBe('AB7K2P')
+    expect(session.joinQrSvg).toBe('<svg />')
   })
 
   it('joins a participant live session from the backend response', async () => {

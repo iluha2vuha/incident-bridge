@@ -22,6 +22,7 @@ from incident_bridge.engine import (
     initial_metric_values,
     transition_phase,
 )
+from incident_bridge.qr import qr_svg
 from incident_bridge.scenario import ScenarioDraft, ScenarioRound
 
 
@@ -117,6 +118,7 @@ class CreateSessionResponse(BaseModel):
     room_code: str
     facilitator_token: str
     join_url: str
+    join_qr_svg: str
     lobby: LobbySnapshot
 
 
@@ -438,11 +440,14 @@ class SessionManager:
         self._sessions[session.id] = session
         self._room_codes[session.room_code] = session.id
 
+        join_url = f"{self._join_url_base}?room={session.room_code}"
+
         return CreateSessionResponse(
             session_id=session.id,
             room_code=session.room_code,
             facilitator_token=session.facilitator_token,
-            join_url=f"{self._join_url_base}?room={session.room_code}",
+            join_url=join_url,
+            join_qr_svg=qr_svg(join_url),
             lobby=session.snapshot(),
         )
 

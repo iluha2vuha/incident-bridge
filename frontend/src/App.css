@@ -710,6 +710,21 @@ input {
   width: 130px;
 }
 
+.qrCode {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  box-sizing: border-box;
+  height: 150px;
+  padding: 10px;
+  width: 150px;
+}
+
+.qrCode svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
 .participantList {
   border: 1px solid var(--ink);
   list-style: none;

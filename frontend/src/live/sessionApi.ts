@@ -5,13 +5,14 @@ import type {
   LiveSessionState,
 } from '../domain/model'
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
+const API_BASE_URL = import.meta.env.VITE_INCIDENT_BRIDGE_API_URL ?? 'http://127.0.0.1:8000'
 
 type CreateSessionResponse = {
   session_id: string
   room_code: string
   facilitator_token: string
   join_url: string
+  join_qr_svg: string
   lobby: LiveLobbySnapshot
 }
 
@@ -48,6 +49,7 @@ export async function createLiveSession(mode: 'quick' | 'standard'): Promise<Liv
     roomCode: response.room_code,
     facilitatorToken: response.facilitator_token,
     joinUrl: response.join_url,
+    joinQrSvg: response.join_qr_svg,
     lobby: response.lobby,
   }
 }

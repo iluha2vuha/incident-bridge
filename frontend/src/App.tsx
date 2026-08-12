@@ -1414,7 +1414,7 @@ function FacilitatorLobby({
             <h1 id="live-room-code" className="roomCode">
               {liveSession.roomCode}
             </h1>
-            <div className="qrPlaceholder" aria-label="QR code placeholder" />
+            <QrPanel svg={liveSession.joinQrSvg} />
             <p className="muted">{liveSession.joinUrl}</p>
           </section>
           <section className="participantsPanel">
@@ -2200,6 +2200,20 @@ function LiveLobbyCount({ lobby }: { lobby: LiveLobbySnapshot }) {
         <span>status</span>
       </div>
     </div>
+  )
+}
+
+function QrPanel({ svg }: { svg?: string }) {
+  if (!svg) {
+    return <div className="qrPlaceholder" aria-label="QR code placeholder" />
+  }
+
+  return (
+    <div
+      className="qrCode"
+      aria-label="Join QR code"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
   )
 }
 

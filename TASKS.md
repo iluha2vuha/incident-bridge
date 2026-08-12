@@ -91,9 +91,9 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 13 - Deployment
 
-- [ ] Document the easiest first demo route after rehearsal.
-- [ ] Document the secondary demo route only if useful.
-- [ ] Add QR-code generation.
+- [x] Document the easiest first demo route after rehearsal.
+- [x] Document the secondary demo route only if useful.
+- [x] Add QR-code generation.
 - [ ] Rehearse with real devices.
 
 ## Phase 14 - Polish / Testing

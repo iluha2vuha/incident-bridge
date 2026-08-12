@@ -206,6 +206,7 @@ export type LiveSessionState = {
   participantToken?: string
   participantName?: string
   joinUrl?: string
+  joinQrSvg?: string
   lobby: LiveLobbySnapshot
 }
 
