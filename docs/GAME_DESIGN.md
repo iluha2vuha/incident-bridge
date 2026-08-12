@@ -79,7 +79,7 @@ IT Helpdesk-only information: A password reset was requested for the employee ea
 
 Public consequence text: The report is now being treated as suspicious. The quality of the next step depends on whether HR and Helpdesk combine the employee's concern with the account activity.
 
-Private facilitator explanation: Strong outcomes preserve the message, verify the employee through trusted channels, and escalate without claiming a fictional policy is official. Weaker outcomes are plausible because they protect payroll speed or queue discipline, but they delay the shared picture.
+Private facilitator explanation: Strong outcomes preserve the message, verify the employee through trusted channels, and escalate without claiming a fictional policy is official. If participants ask what trusted or approved channels mean, keep the answer generic: use a separate known route rather than replying to the suspicious request. Weaker outcomes are plausible because they protect payroll speed or queue discipline, but they delay the shared picture.
 
 Learning objective: Recognise connected warning signs.
 
@@ -126,7 +126,7 @@ IT Helpdesk-only information: Several failed sign-ins were followed by one succe
 
 Public consequence text: The authentication prompts make compromise more likely. Account access, employee support, and payroll handling now need to be coordinated.
 
-Private facilitator explanation: This round should not punish every disruptive action. Sometimes containment costs continuity. The discussion is about sequencing and communication, not finding a magic answer.
+Private facilitator explanation: This round should not punish every disruptive action. Sometimes containment costs continuity. Clarify that pausing sensitive payroll changes for this case is narrower than stopping the whole pay run. The discussion is about sequencing and communication, not finding a magic answer.
 
 Learning objective: Verify identity before sensitive action; preserve evidence.
 
@@ -173,7 +173,7 @@ IT Helpdesk-only information: The forwarding rule sends messages outside the org
 
 Public consequence text: The mailbox rule confirms that the incident is no longer just suspicious. The response now affects payroll continuity and the investigation trail.
 
-Private facilitator explanation: The strongest path usually captures evidence before removal and keeps HR action targeted. Broad or total pauses can be justified but have trust and continuity costs.
+Private facilitator explanation: The strongest path usually captures evidence before removal and keeps HR action targeted. Broad or total pauses can be justified but have trust and continuity costs. If IT considers leaving the rule briefly while monitoring, frame it as a risky trade-off, not as a recommended investigative default.
 
 Learning objective: Balance containment, evidence, continuity, and trust.
 
@@ -220,7 +220,7 @@ IT Helpdesk-only information: The compromised account may have sent messages to 
 
 Public consequence text: The incident is now visible beyond one employee. Communication and technical scoping need to move together.
 
-Private facilitator explanation: There is no perfect communication timing. The exercise should surface what facts are needed, what can be said safely, and why silence can itself create harm.
+Private facilitator explanation: There is no perfect communication timing. The exercise should surface what facts are needed, what can be said safely, and why silence can itself create harm. Ask what trade-off the group is accepting rather than asking for the right answer.
 
 Learning objective: Coordinate business and technical responses.
 
@@ -245,7 +245,7 @@ IT Helpdesk-only information: Unauthorised sessions need confirmation, mailbox r
 
 | ID | Choice | Effects | Flags |
 |---|---|---|---|
-| `hr-r5-support-confirm-communicate` | Support the employee, confirm sensitive payroll actions, and send a factual update through approved channels. | Control +5, Evidence +3, Continuity +3, Trust +10 | adds `employee_supported`, `targeted_warning_sent` |
+| `hr-r5-support-confirm-communicate` | Support the employee, confirm sensitive payroll actions, and prepare a factual update through approved channels. | Control +5, Evidence +3, Continuity -1, Trust +10 | adds `employee_supported`, `targeted_warning_sent` |
 | `hr-r5-quiet-closeout` | Keep communication minimal to avoid extending anxiety once the account is contained. | Control -2, Evidence +1, Continuity +5, Trust -5 | none |
 | `hr-r5-speed-payroll-catchup` | Focus on catching up payroll work and leave incident follow-up to IT. | Control -4, Evidence -2, Continuity +8, Trust -4 | none |
 | `hr-r5-formal-lessons` | Schedule a lessons-learned discussion with HR and IT, but delay employee messaging. | Control +3, Evidence +4, Continuity -2, Trust -2 | adds `recovery_documented` |
@@ -267,7 +267,7 @@ IT Helpdesk-only information: Unauthorised sessions need confirmation, mailbox r
 
 Public consequence text: The incident is ending, but the final impression depends on how recovery, documentation, and employee communication are handled.
 
-Private facilitator explanation: Recovery is a people process as well as a technical process. Strong endings combine secure access restoration, clear records, payroll confidence, and non-blaming communication.
+Private facilitator explanation: Recovery is a people process as well as a technical process. Strong endings combine secure access restoration, clear records, payroll confidence, and non-blaming communication. Preparing a careful update may slow catch-up work slightly, which is the intended trade-off.
 
 Learning objective: Balance containment, continuity, evidence, and trust.
 

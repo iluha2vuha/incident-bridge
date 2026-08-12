@@ -146,3 +146,13 @@ Do not use this document as evidence that the Phase 2 paper prototype was comple
 - Run quick mode with at least three people.
 - Record confusing wording, timing, obvious choices, and role imbalance.
 - Update `docs/GAME_DESIGN.md` and scenario content only after observing real participants.
+
+## Updates Applied From This Review
+
+- Added facilitator notes clarifying that "trusted channel" and "approved channels" should stay generic and should mean a separate known route, not a real local policy.
+- Added facilitator guidance that pausing sensitive payroll changes for one case is narrower than stopping the entire pay run.
+- Added facilitator guidance that leaving a mailbox rule briefly while monitoring should be framed as a risky trade-off.
+- Added facilitator guidance to ask what trade-off the group is accepting rather than asking for the right answer.
+- Adjusted the strongest HR recovery choice from sending a factual update to preparing one, with a small continuity cost, so the choice is not all upside before interaction effects.
+
+Remaining review findings need human testing before scenario content is changed further.

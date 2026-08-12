@@ -245,7 +245,7 @@
         }
       ],
       "public_consequence": "The report is now being treated as suspicious. The quality of the next step depends on whether HR and Helpdesk combine the employee's concern with the account activity.",
-      "facilitator_note": "Strong outcomes preserve the message, verify the employee through trusted channels, and escalate without claiming a fictional policy is official. Weaker outcomes are plausible because they protect payroll speed or queue discipline, but they delay the shared picture.",
+      "facilitator_note": "Strong outcomes preserve the message, verify the employee through trusted channels, and escalate without claiming a fictional policy is official. If participants ask what trusted or approved channels mean, keep the answer generic: use a separate known route rather than replying to the suspicious request. Weaker outcomes are plausible because they protect payroll speed or queue discipline, but they delay the shared picture.",
       "learning_objective": "Recognise connected warning signs.",
       "learning_point": "A business request and a technical event can be parts of one incident.",
       "discussion_questions": [
@@ -418,7 +418,7 @@
         }
       ],
       "public_consequence": "The authentication prompts make compromise more likely. Account access, employee support, and payroll handling now need to be coordinated.",
-      "facilitator_note": "This round should not punish every disruptive action. Sometimes containment costs continuity. The discussion is about sequencing and communication, not finding a magic answer.",
+      "facilitator_note": "This round should not punish every disruptive action. Sometimes containment costs continuity. Clarify that pausing sensitive payroll changes for this case is narrower than stopping the whole pay run. The discussion is about sequencing and communication, not finding a magic answer.",
       "learning_objective": "Verify identity before sensitive action; preserve evidence.",
       "learning_point": "Prompt fatigue and urgent business context can combine to create risk.",
       "discussion_questions": [
@@ -594,7 +594,7 @@
         }
       ],
       "public_consequence": "The mailbox rule confirms that the incident is no longer just suspicious. The response now affects payroll continuity and the investigation trail.",
-      "facilitator_note": "The strongest path usually captures evidence before removal and keeps HR action targeted. Broad or total pauses can be justified but have trust and continuity costs.",
+      "facilitator_note": "The strongest path usually captures evidence before removal and keeps HR action targeted. Broad or total pauses can be justified but have trust and continuity costs. If IT considers leaving the rule briefly while monitoring, frame it as a risky trade-off, not as a recommended investigative default.",
       "learning_objective": "Balance containment, evidence, continuity, and trust.",
       "learning_point": "Cleanup is not the same as containment if useful evidence disappears.",
       "discussion_questions": [
@@ -766,7 +766,7 @@
         }
       ],
       "public_consequence": "The incident is now visible beyond one employee. Communication and technical scoping need to move together.",
-      "facilitator_note": "There is no perfect communication timing. The exercise should surface what facts are needed, what can be said safely, and why silence can itself create harm.",
+      "facilitator_note": "There is no perfect communication timing. The exercise should surface what facts are needed, what can be said safely, and why silence can itself create harm. Ask what trade-off the group is accepting rather than asking for the right answer.",
       "learning_objective": "Coordinate business and technical responses.",
       "learning_point": "Communication should be timely, factual, and linked to the response process.",
       "discussion_questions": [
@@ -787,11 +787,11 @@
         "hr": [
           {
             "id": "hr-r5-support-confirm-communicate",
-            "label": "Support the employee, confirm sensitive payroll actions, and send a factual update through approved channels.",
+            "label": "Support the employee, confirm sensitive payroll actions, and prepare a factual update through approved channels.",
             "effects": {
               "incident_control": 5,
               "evidence_quality": 3,
-              "business_continuity": 3,
+              "business_continuity": -1,
               "employee_trust": 10
             },
             "adds_flags": [
@@ -942,7 +942,7 @@
         }
       ],
       "public_consequence": "The incident is ending, but the final impression depends on how recovery, documentation, and employee communication are handled.",
-      "facilitator_note": "Recovery is a people process as well as a technical process. Strong endings combine secure access restoration, clear records, payroll confidence, and non-blaming communication.",
+      "facilitator_note": "Recovery is a people process as well as a technical process. Strong endings combine secure access restoration, clear records, payroll confidence, and non-blaming communication. Preparing a careful update may slow catch-up work slightly, which is the intended trade-off.",
       "learning_objective": "Balance containment, continuity, evidence, and trust.",
       "learning_point": "A good incident response ends with recovery, documentation, and learning, not just removal of the visible threat.",
       "discussion_questions": [
