@@ -580,6 +580,7 @@ input {
 .setupGrid,
 .controlGrid,
 .facilitatorLobby {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -596,6 +597,10 @@ input {
   justify-content: center;
   padding-inline-end: var(--space-6);
   text-align: center;
+}
+
+.facilitatorLobby .roomPanel {
+  min-height: 420px;
 }
 
 .participantsPanel {
@@ -620,7 +625,6 @@ input {
   border: 1px solid var(--ink);
   list-style: none;
   margin: 0;
-  max-height: 180px;
   overflow: auto;
   padding: 0;
 }
@@ -663,16 +667,32 @@ input {
 
 @media (max-width: 760px) {
   .topbar {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .prototypeLabel {
+    display: none;
   }
 
   .topbar nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-inline-start: 0;
+    width: 100%;
+  }
+
+  .topbar nav a {
+    font-size: 0.78rem;
+    min-height: 36px;
+    padding: 6px 8px;
+    text-align: center;
   }
 
   main {
-    padding: var(--space-4);
+    padding: var(--space-3);
   }
 
   .phoneFrame {
@@ -693,9 +713,12 @@ input {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .ticketArtifact dl,
-  .metricGrid {
+  .ticketArtifact dl {
     grid-template-columns: 1fr;
+  }
+
+  .metricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

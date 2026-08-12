@@ -207,30 +207,27 @@ function PrototypeApp() {
 
 function TopBar() {
   const location = useLocation()
+  const isReview = location.pathname === '/review' || location.pathname === '/'
+  const isParticipant = location.pathname.startsWith('/participant')
+  const isFacilitator = location.pathname.startsWith('/facilitator')
 
   return (
-    <header className="topbar">
+    <header className={`topbar ${isParticipant ? 'participantOnly' : ''}`}>
       <Link className="brand" to="/review" aria-label="Incident Bridge review index">
         Incident Bridge
       </Link>
-      <span className="prototypeLabel">Prototype, fake data only</span>
-      <nav aria-label="Primary prototype routes">
-        <Link aria-current={location.pathname === '/review' ? 'page' : undefined} to="/review">
-          Review index
-        </Link>
-        <Link
-          aria-current={location.pathname.startsWith('/participant') ? 'page' : undefined}
-          to="/participant/join"
-        >
-          Participant
-        </Link>
-        <Link
-          aria-current={location.pathname.startsWith('/facilitator') ? 'page' : undefined}
-          to="/facilitator/create"
-        >
-          Facilitator
-        </Link>
-      </nav>
+      {isParticipant ? <span className="prototypeLabel">Participant view</span> : null}
+      {isFacilitator ? <span className="prototypeLabel">Facilitator view</span> : null}
+      {isReview ? <span className="prototypeLabel">Prototype, fake data only</span> : null}
+      {isReview ? (
+        <nav aria-label="Primary prototype routes">
+          <Link aria-current={location.pathname === '/review' ? 'page' : undefined} to="/review">
+            Review index
+          </Link>
+          <Link to="/participant/join">Participant</Link>
+          <Link to="/facilitator/create">Facilitator</Link>
+        </nav>
+      ) : null}
     </header>
   )
 }
