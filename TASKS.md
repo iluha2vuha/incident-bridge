@@ -17,6 +17,8 @@
 
 ## Phase 2 - Paper Prototype
 
+Status: deferred/not complete.
+
 Note: `docs/SCENARIO_DRY_REVIEW.md` records an agent-assisted pre-test review, but this does not complete Phase 2. These tasks require a real manual run with participants.
 
 - [ ] Run the scenario manually with at least 3 people.

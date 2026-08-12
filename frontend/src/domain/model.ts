@@ -69,6 +69,7 @@ export type ScenarioContent = {
   round: RoundContent
   roles: Record<RoleId, RoleContent>
   artifacts: ScenarioArtifacts
+  facilitatorNote: string
 }
 
 export type ParticipantRecord = {

@@ -27,7 +27,7 @@ describe('mock protocol snapshots', () => {
 
     expect(snapshot.lobby.warning).toMatch(/role imbalance/i)
     expect(snapshot.vote.warning).toMatch(/not voted/i)
-    expect(snapshot.privateRoundNote).toMatch(/coordination moment/i)
+    expect(snapshot.privateRoundNote).toMatch(/preserve the message/i)
     expect(snapshot.participants).toHaveLength(6)
   })
 })

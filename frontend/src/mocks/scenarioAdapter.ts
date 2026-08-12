@@ -33,6 +33,21 @@ export function buildMockScenarioContent(
     },
     roles: buildRoleContent(scenarioDraft, round),
     artifacts,
+    facilitatorNote: round.facilitator_note,
+  }
+}
+
+export function buildDepartmentDecisionLabels(
+  scenarioContent: ScenarioContent,
+  selectedChoiceIds: Record<RoleId, string>,
+): Record<RoleId, string> {
+  return {
+    hr: getSelectedChoiceLabel(scenarioContent, 'hr', selectedChoiceIds.hr),
+    'it-helpdesk': getSelectedChoiceLabel(
+      scenarioContent,
+      'it-helpdesk',
+      selectedChoiceIds['it-helpdesk'],
+    ),
   }
 }
 
@@ -73,6 +88,22 @@ export function buildMetricDeltas(
     label: metric.name,
     value: formatDelta(effects[metric.id] ?? 0),
   }))
+}
+
+function getSelectedChoiceLabel(
+  scenarioContent: ScenarioContent,
+  roleId: RoleId,
+  choiceId: string,
+): string {
+  const choice = scenarioContent.roles[roleId].choices.find(
+    (candidate) => candidate.id === choiceId,
+  )
+
+  if (!choice) {
+    throw new Error(`Mock decision ${choiceId} is not a ${roleId} choice`)
+  }
+
+  return choice.label
 }
 
 function buildRoleContent(

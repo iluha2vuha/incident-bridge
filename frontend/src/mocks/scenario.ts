@@ -1,5 +1,6 @@
 import type { ReviewNavGroup, ScenarioArtifacts } from '../domain/model'
 import {
+  buildDepartmentDecisionLabels,
   buildMetricDeltas,
   buildMockScenarioContent,
   fridayPayRunScenarioDraft,
@@ -41,6 +42,11 @@ export const mockDepartmentChoiceIds = {
 
 export const metricDeltas = buildMetricDeltas(
   fridayPayRunScenarioDraft,
+  mockDepartmentChoiceIds,
+)
+
+export const mockDepartmentDecisions = buildDepartmentDecisionLabels(
+  scenario,
   mockDepartmentChoiceIds,
 )
 

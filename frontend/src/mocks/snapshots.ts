@@ -7,7 +7,7 @@ import type {
   RoleId,
   VoteVariant,
 } from '../domain/model'
-import { metricDeltas, roles, scenario } from './scenario'
+import { metricDeltas, mockDepartmentDecisions, roles, scenario } from './scenario'
 import { fakeParticipants, lobbySnapshots, mockSession, voteSnapshots } from './session'
 
 function roleArtifact(role: RoleId): RoleArtifact {
@@ -31,10 +31,7 @@ export function buildParticipantSnapshot(
     lobby: lobbySnapshots.ready,
     round: scenario.round,
     artifact: roleArtifact(role),
-    departmentDecisions: {
-      hr: roles.hr.choices[1].label,
-      'it-helpdesk': roles['it-helpdesk'].choices[1].label,
-    },
+    departmentDecisions: mockDepartmentDecisions,
     metricDeltas,
   }
 }
@@ -51,13 +48,9 @@ export function buildFacilitatorSnapshot(
     lobby: lobbySnapshots[lobbyVariant],
     vote: voteSnapshots[voteVariant],
     round: scenario.round,
-    departmentDecisions: {
-      hr: roles.hr.choices[1].label,
-      'it-helpdesk': roles['it-helpdesk'].choices[1].label,
-    },
+    departmentDecisions: mockDepartmentDecisions,
     metricDeltas,
-    privateRoundNote:
-      'Ask HR what the sender name looked like before asking IT what they saw on the account. That is the coordination moment.',
+    privateRoundNote: scenario.facilitatorNote,
     scenarioTitle: scenario.title,
   }
 }

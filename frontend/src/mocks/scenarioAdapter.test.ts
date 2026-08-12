@@ -1,10 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { metricDeltas, mockDepartmentChoiceIds, roles, scenario } from './scenario'
+import {
+  metricDeltas,
+  mockDepartmentChoiceIds,
+  mockDepartmentDecisions,
+  roles,
+  scenario,
+} from './scenario'
 import { fridayPayRunScenarioDraft } from './scenarioAdapter'
 
 describe('mock scenario adapter', () => {
   it('builds static scenario content from the validated JSON draft', () => {
-    const firstRound = fridayPayRunScenarioDraft.rounds[0]
+    const firstRoundId = fridayPayRunScenarioDraft.modes.standard.round_ids[0]
+    const firstRound = fridayPayRunScenarioDraft.rounds.find(
+      (round) => round.id === firstRoundId,
+    )
+
+    expect(firstRound).toBeDefined()
+    if (!firstRound) {
+      throw new Error(`Missing first standard round: ${firstRoundId}`)
+    }
 
     expect(scenario.id).toBe(fridayPayRunScenarioDraft.id)
     expect(scenario.title).toBe(fridayPayRunScenarioDraft.title)
@@ -13,6 +27,7 @@ describe('mock scenario adapter', () => {
     expect(scenario.round.shared).toBe(firstRound.shared_update)
     expect(scenario.round.consequence).toBe(firstRound.public_consequence)
     expect(scenario.round.learning).toBe(firstRound.learning_point)
+    expect(scenario.facilitatorNote).toBe(firstRound.facilitator_note)
   })
 
   it('maps role-private information and choices from the first scenario round', () => {
@@ -41,5 +56,10 @@ describe('mock scenario adapter', () => {
       { label: 'Business Continuity', value: '-5' },
       { label: 'Employee Trust', value: '+17' },
     ])
+    expect(mockDepartmentDecisions).toEqual({
+      hr: 'Contact the employee through a trusted channel, preserve the message, and escalate the concern.',
+      'it-helpdesk':
+        'Verify the employee through an approved channel and review recent account activity.',
+    })
   })
 })
