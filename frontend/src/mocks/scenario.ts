@@ -13,8 +13,7 @@ const artifacts: ScenarioArtifacts = {
     recipientLine: 'To: Jordan Patel. Today, 09:07',
     externalSenderNotice: 'This message was sent from an address outside the organisation.',
     subject: "Action required before today's pay run",
-    body:
-      "Hi Jordan, we are finalising this cycle's run and your record needs a quick confirmation of bank and ID details before 11am today. Reply with the attached form completed so payroll is not delayed.",
+    body: "Hi Jordan, we are finalising this cycle's run and your record needs a quick confirmation of bank and ID details before 11am today. Reply with the attached form completed so payroll is not delayed.",
   },
   itTicket: {
     id: 'INC-10427',
@@ -40,10 +39,7 @@ export const mockDepartmentChoiceIds = {
   'it-helpdesk': 'it-r1-verify-and-review',
 } as const
 
-export const metricDeltas = buildMetricDeltas(
-  fridayPayRunScenarioDraft,
-  mockDepartmentChoiceIds,
-)
+export const metricDeltas = buildMetricDeltas(fridayPayRunScenarioDraft, mockDepartmentChoiceIds)
 
 export const mockDepartmentDecisions = buildDepartmentDecisionLabels(
   scenario,

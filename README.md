@@ -2,7 +2,7 @@
 
 Incident Bridge is a concept demonstration for a facilitator-led, multiplayer cybersecurity tabletop exercise. Participants use their phones to join a temporary room, choose a department role, receive role-specific information, vote on decisions during a fictional incident, and review the organisational consequences with a facilitator.
 
-Current status: project foundation and paper prototype. This repository does not yet contain the React/FastAPI application.
+Current status: technical skeleton. The repository contains validated scenario content, a React/TypeScript/Vite prototype frontend, and a small FastAPI backend skeleton. Live multiplayer gameplay is not implemented yet.
 
 ## Why It Exists
 
@@ -40,12 +40,39 @@ No database, user accounts, chat, runtime AI, complex admin system, or multi-ser
 ## Project Structure
 
 ```text
+backend/    FastAPI/Pydantic backend skeleton, scenario models, and Python tests
 docs/       Source-of-truth product, game, protocol, architecture, threat, and constraint docs
 design/     UX flow, wireframe, and design direction docs
+frontend/   React/TypeScript/Vite prototype frontend and frontend tests
 scenarios/  Human-readable draft scenario source
 scripts/    Small repo-level utility commands
 AGENTS.md   Rules for future AI coding agents
 TASKS.md    Ordered backlog and scope boundaries
+```
+
+## Local Development
+
+Install dependencies:
+
+```sh
+make install-backend
+make install-frontend
+```
+
+Run local servers:
+
+```sh
+make backend-dev
+make frontend-dev
+```
+
+Run validation, tests, linting, and formatting:
+
+```sh
+make validate-scenario
+make test
+make lint
+make format
 ```
 
 ## Scenario Validation
@@ -58,11 +85,12 @@ python3 scripts/validate_scenario.py
 
 ## Roadmap
 
-The next approved development work should validate the scenario format and prepare the paper prototype before building application code. See `TASKS.md` for the ordered backlog.
+See `TASKS.md` for the ordered backlog. The next application phase is the static fake-data interface before live room creation, joining, role selection, and voting.
 
 ## Limitations
 
 - This is not production-ready.
 - No live multiplayer implementation exists yet.
+- The FastAPI backend is a technical skeleton only.
 - Public release, company affiliation, and ownership must be clarified before publication.
 - Deployment and local networking decisions are deliberately unresolved; the first demo should use whichever route is easiest to rehearse safely.

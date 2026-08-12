@@ -17,9 +17,11 @@
 
 ## Phase 2 - Paper Prototype
 
-Status: deferred/not complete.
+Status: deferred/user-owned; not complete.
 
 Note: `docs/SCENARIO_DRY_REVIEW.md` records an agent-assisted pre-test review, but this does not complete Phase 2. These tasks require a real manual run with participants.
+
+Codex note: do not remind the project owner to run Phase 2 unless they explicitly ask about paper testing, rehearsal, or Phase 2.
 
 - [ ] Run the scenario manually with at least 3 people.
 - [ ] Record confusing instructions, timing, obvious choices, and role imbalance.
@@ -33,11 +35,11 @@ Note: `docs/SCENARIO_DRY_REVIEW.md` records an agent-assisted pre-test review, b
 
 ## Phase 4 - Repository Technical Setup
 
-- [ ] Add React + TypeScript + Vite frontend skeleton.
-- [ ] Add FastAPI + Pydantic backend skeleton.
-- [ ] Add test, lint, and formatting commands.
+- [x] Add React + TypeScript + Vite frontend skeleton.
+- [x] Add FastAPI + Pydantic backend skeleton.
+- [x] Add test, lint, and formatting commands.
 - [x] Add scenario validation command.
-- [ ] Add minimal CI only after local commands exist.
+- [x] Add minimal CI only after local commands exist.
 
 ## Phase 5 - Static Interface
 

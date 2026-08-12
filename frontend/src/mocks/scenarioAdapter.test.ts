@@ -11,9 +11,7 @@ import { fridayPayRunScenarioDraft } from './scenarioAdapter'
 describe('mock scenario adapter', () => {
   it('builds static scenario content from the validated JSON draft', () => {
     const firstRoundId = fridayPayRunScenarioDraft.modes.standard.round_ids[0]
-    const firstRound = fridayPayRunScenarioDraft.rounds.find(
-      (round) => round.id === firstRoundId,
-    )
+    const firstRound = fridayPayRunScenarioDraft.rounds.find((round) => round.id === firstRoundId)
 
     expect(firstRound).toBeDefined()
     if (!firstRound) {
@@ -34,9 +32,7 @@ describe('mock scenario adapter', () => {
     const firstRound = fridayPayRunScenarioDraft.rounds[0]
 
     expect(roles.hr.privateInfo).toBe(firstRound.role_information.hr)
-    expect(roles['it-helpdesk'].privateInfo).toBe(
-      firstRound.role_information['it-helpdesk'],
-    )
+    expect(roles['it-helpdesk'].privateInfo).toBe(firstRound.role_information['it-helpdesk'])
     expect(roles.hr.choices.map((choice) => choice.id)).toEqual(
       firstRound.choices.hr.map((choice) => choice.id),
     )

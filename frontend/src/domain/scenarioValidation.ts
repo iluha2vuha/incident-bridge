@@ -292,7 +292,9 @@ function validateModes(value: unknown, rounds: ScenarioRound[], errors: string[]
     const standardIndex = standardRoundIds.indexOf(roundId)
 
     if (standardIndex === -1) {
-      errors.push(`scenario.modes.quick.round_ids references ${roundId}, which is not in standard mode`)
+      errors.push(
+        `scenario.modes.quick.round_ids references ${roundId}, which is not in standard mode`,
+      )
       continue
     }
 
@@ -683,12 +685,7 @@ function validateExactRecordKeys(
   }
 }
 
-function expectUnique(
-  value: string,
-  seen: Set<string>,
-  path: Path,
-  errors: string[],
-): void {
+function expectUnique(value: string, seen: Set<string>, path: Path, errors: string[]): void {
   if (seen.has(value)) {
     errors.push(`${path} must be unique`)
     return
@@ -703,23 +700,13 @@ function expectNonEmptyString(value: unknown, path: Path, errors: string[]): voi
   }
 }
 
-function expectExactString(
-  value: unknown,
-  expected: string,
-  path: Path,
-  errors: string[],
-): void {
+function expectExactString(value: unknown, expected: string, path: Path, errors: string[]): void {
   if (value !== expected) {
     errors.push(`${path} must be ${expected}`)
   }
 }
 
-function expectExactNumber(
-  value: unknown,
-  expected: number,
-  path: Path,
-  errors: string[],
-): void {
+function expectExactNumber(value: unknown, expected: number, path: Path, errors: string[]): void {
   if (value !== expected) {
     errors.push(`${path} must be ${expected}`)
   }

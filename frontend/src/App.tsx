@@ -46,20 +46,126 @@ function PrototypeApp() {
         <Routes>
           <Route path="/" element={<Navigate to="/review" replace />} />
           <Route path="/review" element={<ReviewIndex {...state} />} />
-          <Route path="/participant/join" element={<ParticipantShell><JoinScreen /></ParticipantShell>} />
-          <Route path="/participant/role" element={<ParticipantShell><RoleSelection role={state.role} setRole={state.setRole} /></ParticipantShell>} />
-          <Route path="/participant/lobby" element={<ParticipantShell><ParticipantLobby snapshot={state.participantSnapshot} /></ParticipantShell>} />
-          <Route path="/participant/briefing" element={<ParticipantShell><RoleBriefing snapshot={state.participantSnapshot} /></ParticipantShell>} />
-          <Route path="/participant/round" element={<ParticipantShell><RoundWorkspace {...state} mode="decision" /></ParticipantShell>} />
-          <Route path="/participant/waiting" element={<ParticipantShell><RoundWorkspace {...state} mode="waiting" /></ParticipantShell>} />
-          <Route path="/participant/result" element={<ParticipantShell><ParticipantResult snapshot={state.participantSnapshot} /></ParticipantShell>} />
-          <Route path="/participant/disconnected" element={<ParticipantShell><ConnectionExample state="disconnected" selectedChoice={state.selectedChoice} /></ParticipantShell>} />
-          <Route path="/participant/reconnecting" element={<ParticipantShell><ConnectionExample state="reconnecting" selectedChoice={state.selectedChoice} /></ParticipantShell>} />
-          <Route path="/facilitator/create" element={<FacilitatorShell><CreateSession snapshot={state.facilitatorSnapshot} /></FacilitatorShell>} />
-          <Route path="/facilitator/lobby" element={<FacilitatorShell><FacilitatorLobby snapshot={state.facilitatorSnapshot} variant={state.lobbyVariant} setVariant={state.setLobbyVariant} /></FacilitatorShell>} />
-          <Route path="/facilitator/round" element={<FacilitatorShell><LiveRoundControl snapshot={state.facilitatorSnapshot} variant={state.voteVariant} setVariant={state.setVoteVariant} /></FacilitatorShell>} />
-          <Route path="/facilitator/lock" element={<FacilitatorShell><LockRoundConfirmation /></FacilitatorShell>} />
-          <Route path="/facilitator/result" element={<FacilitatorShell><FacilitatorResult snapshot={state.facilitatorSnapshot} /></FacilitatorShell>} />
+          <Route
+            path="/participant/join"
+            element={
+              <ParticipantShell>
+                <JoinScreen />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/role"
+            element={
+              <ParticipantShell>
+                <RoleSelection role={state.role} setRole={state.setRole} />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/lobby"
+            element={
+              <ParticipantShell>
+                <ParticipantLobby snapshot={state.participantSnapshot} />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/briefing"
+            element={
+              <ParticipantShell>
+                <RoleBriefing snapshot={state.participantSnapshot} />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/round"
+            element={
+              <ParticipantShell>
+                <RoundWorkspace {...state} mode="decision" />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/waiting"
+            element={
+              <ParticipantShell>
+                <RoundWorkspace {...state} mode="waiting" />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/result"
+            element={
+              <ParticipantShell>
+                <ParticipantResult snapshot={state.participantSnapshot} />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/disconnected"
+            element={
+              <ParticipantShell>
+                <ConnectionExample state="disconnected" selectedChoice={state.selectedChoice} />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/participant/reconnecting"
+            element={
+              <ParticipantShell>
+                <ConnectionExample state="reconnecting" selectedChoice={state.selectedChoice} />
+              </ParticipantShell>
+            }
+          />
+          <Route
+            path="/facilitator/create"
+            element={
+              <FacilitatorShell>
+                <CreateSession snapshot={state.facilitatorSnapshot} />
+              </FacilitatorShell>
+            }
+          />
+          <Route
+            path="/facilitator/lobby"
+            element={
+              <FacilitatorShell>
+                <FacilitatorLobby
+                  snapshot={state.facilitatorSnapshot}
+                  variant={state.lobbyVariant}
+                  setVariant={state.setLobbyVariant}
+                />
+              </FacilitatorShell>
+            }
+          />
+          <Route
+            path="/facilitator/round"
+            element={
+              <FacilitatorShell>
+                <LiveRoundControl
+                  snapshot={state.facilitatorSnapshot}
+                  variant={state.voteVariant}
+                  setVariant={state.setVoteVariant}
+                />
+              </FacilitatorShell>
+            }
+          />
+          <Route
+            path="/facilitator/lock"
+            element={
+              <FacilitatorShell>
+                <LockRoundConfirmation />
+              </FacilitatorShell>
+            }
+          />
+          <Route
+            path="/facilitator/result"
+            element={
+              <FacilitatorShell>
+                <FacilitatorResult snapshot={state.facilitatorSnapshot} />
+              </FacilitatorShell>
+            }
+          />
         </Routes>
       </main>
     </div>
@@ -124,9 +230,9 @@ function ReviewIndex({
         <p className="eyebrow">Development-only state index</p>
         <h1>One round, two truths</h1>
         <p>
-          Review the fake-data participant and facilitator experience without a
-          backend. The role switch below is review tooling only and is never
-          presented as a post-lock participant control.
+          Review the fake-data participant and facilitator experience without a backend. The role
+          switch below is review tooling only and is never presented as a post-lock participant
+          control.
         </p>
       </div>
 
@@ -160,27 +266,29 @@ function ReviewIndex({
           <fieldset>
             <legend>Participant round state</legend>
             <div className="buttonRow">
-              {(['choice', 'confirm', 'submitted', 'waiting'] as ChoiceStep[]).map(
-                (step) => (
-                  <button
-                    key={step}
-                    type="button"
-                    className="secondaryButton"
-                    onClick={() => {
-                      setChoiceStep(step)
-                      navigate(step === 'waiting' ? '/participant/waiting' : '/participant/round')
-                    }}
-                  >
-                    {step}
-                  </button>
-                ),
-              )}
+              {(['choice', 'confirm', 'submitted', 'waiting'] as ChoiceStep[]).map((step) => (
+                <button
+                  key={step}
+                  type="button"
+                  className="secondaryButton"
+                  onClick={() => {
+                    setChoiceStep(step)
+                    navigate(step === 'waiting' ? '/participant/waiting' : '/participant/round')
+                  }}
+                >
+                  {step}
+                </button>
+              ))}
             </div>
           </fieldset>
           <fieldset>
             <legend>Connection examples</legend>
             <div className="buttonRow">
-              <button type="button" className="secondaryButton" onClick={() => setConnection('connected')}>
+              <button
+                type="button"
+                className="secondaryButton"
+                onClick={() => setConnection('connected')}
+              >
                 Connected
               </button>
               <button
@@ -254,12 +362,7 @@ function SegmentedControl({
   return (
     <div className="segmented" role="group">
       {options.map(([id, label]) => (
-        <button
-          key={id}
-          type="button"
-          aria-pressed={value === id}
-          onClick={() => onChange(id)}
-        >
+        <button key={id} type="button" aria-pressed={value === id} onClick={() => onChange(id)}>
           {label}
         </button>
       ))}
@@ -292,9 +395,13 @@ function JoinScreen() {
         <h1>Incident Bridge</h1>
         <p className="muted">A short incident-response exercise. No account needed.</p>
       </div>
-      <label className="fieldLabel" htmlFor="room-code">Room code</label>
+      <label className="fieldLabel" htmlFor="room-code">
+        Room code
+      </label>
       <input id="room-code" value={mockSession.roomCode} readOnly className="codeInput" />
-      <label className="fieldLabel" htmlFor="nickname">Temporary nickname</label>
+      <label className="fieldLabel" htmlFor="nickname">
+        Temporary nickname
+      </label>
       <input id="nickname" value={mockSession.participantName} readOnly />
       <Link className="primaryButton" to="/participant/role">
         Join room
@@ -306,13 +413,7 @@ function JoinScreen() {
   )
 }
 
-function RoleSelection({
-  role,
-  setRole,
-}: {
-  role: RoleId
-  setRole: (role: RoleId) => void
-}) {
+function RoleSelection({ role, setRole }: { role: RoleId; setRole: (role: RoleId) => void }) {
   return (
     <section className="screenStack">
       <h1>Choose your role</h1>
@@ -322,8 +423,8 @@ function RoleSelection({
         Continue
       </Link>
       <p className="smallNote">
-        Role selection affects private information and choices. It locks once the
-        facilitator starts.
+        Role selection affects private information and choices. It locks once the facilitator
+        starts.
       </p>
     </section>
   )
@@ -360,7 +461,9 @@ function ParticipantLobby({ snapshot }: { snapshot: ParticipantSnapshot }) {
       <div>
         <p className="eyebrow">Room</p>
         <h1 className="roomCode">{snapshot.roomCode}</h1>
-        <p className="muted">{snapshot.participantName}, you are {snapshot.role.label}</p>
+        <p className="muted">
+          {snapshot.participantName}, you are {snapshot.role.label}
+        </p>
       </div>
       <CountGrid snapshot={snapshot} />
       <Notice tone="neutral">Waiting for the facilitator to start the exercise.</Notice>
@@ -380,8 +483,8 @@ function RoleBriefing({ snapshot }: { snapshot: ParticipantSnapshot }) {
         <p>{snapshot.role.briefing}</p>
       </div>
       <p className="muted">
-        You will receive information the other role does not see. Share relevant
-        observations before voting.
+        You will receive information the other role does not see. Share relevant observations before
+        voting.
       </p>
       <Notice tone="neutral">Waiting for the facilitator to open Round 1.</Notice>
     </section>
@@ -413,11 +516,15 @@ function RoundWorkspace({
   return (
     <section className="roundScreen">
       <div className="roundHeader">
-        <span className="mono">Round {participantSnapshot.round.number} of {participantSnapshot.round.total}</span>
+        <span className="mono">
+          Round {participantSnapshot.round.number} of {participantSnapshot.round.total}
+        </span>
         <StatusLine state="connected" compact />
       </div>
       <RoleBadge role={role} privacy={`Private to ${content.label}`} />
-      <IncidentPanel title="Shared incident update">{participantSnapshot.round.shared}</IncidentPanel>
+      <IncidentPanel title="Shared incident update">
+        {participantSnapshot.round.shared}
+      </IncidentPanel>
       <div className={`privatePanel ${role}`}>
         <p className="panelLabel">Private to {content.label}</p>
         <p>{content.privateInfo}</p>
@@ -463,7 +570,11 @@ function ChoiceState({
           <button type="button" className="secondaryButton" onClick={() => setChoiceStep('choice')}>
             Back
           </button>
-          <button type="button" className="primaryButton" onClick={() => setChoiceStep('submitted')}>
+          <button
+            type="button"
+            className="primaryButton"
+            onClick={() => setChoiceStep('submitted')}
+          >
             Confirm
           </button>
         </div>
@@ -529,7 +640,9 @@ function ParticipantResult({ snapshot }: { snapshot: ParticipantSnapshot }) {
       <IncidentPanel title="Public consequence">{snapshot.round.consequence}</IncidentPanel>
       <MetricGrid metrics={snapshot.metricDeltas} />
       <p className="learningPoint">Learning point: {snapshot.round.learning}</p>
-      <Notice tone="neutral">Waiting for the facilitator to continue, {snapshot.role.shortLabel}.</Notice>
+      <Notice tone="neutral">
+        Waiting for the facilitator to continue, {snapshot.role.shortLabel}.
+      </Notice>
     </section>
   )
 }
@@ -562,7 +675,9 @@ function CreateSession({ snapshot }: { snapshot: FacilitatorSnapshot }) {
       <div>
         <p className="eyebrow">Facilitator</p>
         <h1>Create session</h1>
-        <p className="muted">Fictional training content only. No real room is created in this static slice.</p>
+        <p className="muted">
+          Fictional training content only. No real room is created in this static slice.
+        </p>
       </div>
       <div className="setupGrid">
         <section className="panel">
@@ -602,7 +717,9 @@ function FacilitatorLobby({
       <div className="facilitatorLobby">
         <section className="roomPanel" aria-labelledby="room-code">
           <p className="eyebrow">Room code</p>
-          <h1 id="room-code" className="roomCode">{snapshot.roomCode}</h1>
+          <h1 id="room-code" className="roomCode">
+            {snapshot.roomCode}
+          </h1>
           <div className="qrPlaceholder" aria-label="QR code placeholder" />
           <p className="muted">{snapshot.joinUrl}</p>
         </section>
@@ -619,11 +736,19 @@ function FacilitatorLobby({
             />
           </div>
           <RoleCountCards snapshot={snapshot} />
-          {snapshot.lobby.warning ? <Notice tone="warning" live>{snapshot.lobby.warning}</Notice> : null}
+          {snapshot.lobby.warning ? (
+            <Notice tone="warning" live>
+              {snapshot.lobby.warning}
+            </Notice>
+          ) : null}
           <ParticipantList participants={snapshot.participants} />
           <div className="buttonRow">
-            <button type="button" className="secondaryButton">End session</button>
-            <Link className="primaryButton" to="/facilitator/round">Start exercise</Link>
+            <button type="button" className="secondaryButton">
+              End session
+            </button>
+            <Link className="primaryButton" to="/facilitator/round">
+              Start exercise
+            </Link>
           </div>
         </section>
       </div>
@@ -645,10 +770,14 @@ function LiveRoundControl({
       <div className="roundControlHeader">
         <div>
           <p className="eyebrow">Voting open</p>
-          <h1>Round {snapshot.round.number} of {snapshot.round.total}: {snapshot.round.title}</h1>
+          <h1>
+            Round {snapshot.round.number} of {snapshot.round.total}: {snapshot.round.title}
+          </h1>
           <p className="muted">{snapshot.round.shared}</p>
         </div>
-        <Link className="primaryButton desktopAction" to="/facilitator/lock">Lock voting</Link>
+        <Link className="primaryButton desktopAction" to="/facilitator/lock">
+          Lock voting
+        </Link>
       </div>
       <SegmentedControl
         value={variant}
@@ -667,7 +796,11 @@ function LiveRoundControl({
             <VoteCard role="hr" value={snapshot.vote.hr} />
             <VoteCard role="it-helpdesk" value={snapshot.vote.it} />
           </div>
-          {snapshot.vote.warning ? <Notice tone="warning" live>{snapshot.vote.warning}</Notice> : null}
+          {snapshot.vote.warning ? (
+            <Notice tone="warning" live>
+              {snapshot.vote.warning}
+            </Notice>
+          ) : null}
           <div className="eventTimeline">
             <p>09:41 - Round opened</p>
             <p>09:42 - HR vote received</p>
@@ -690,8 +823,12 @@ function LockRoundConfirmation() {
       <p className="muted">HR: 2/3 votes. IT Helpdesk: 1/3 votes.</p>
       <Notice tone="warning">Late votes will be rejected after locking.</Notice>
       <div className="buttonRow twoColumn">
-        <Link className="secondaryButton" to="/facilitator/round">Cancel</Link>
-        <Link className="primaryButton" to="/facilitator/result">Confirm lock</Link>
+        <Link className="secondaryButton" to="/facilitator/round">
+          Cancel
+        </Link>
+        <Link className="primaryButton" to="/facilitator/result">
+          Confirm lock
+        </Link>
       </div>
     </section>
   )
@@ -705,7 +842,9 @@ function FacilitatorResult({ snapshot }: { snapshot: FacilitatorSnapshot }) {
           <p className="eyebrow">Ready to reveal</p>
           <h1>Round consequence</h1>
         </div>
-        <button type="button" className="primaryButton desktopAction">Reveal to participants</button>
+        <button type="button" className="primaryButton desktopAction">
+          Reveal to participants
+        </button>
       </div>
       <div className="controlGrid">
         <section className="panel">
@@ -741,7 +880,9 @@ function EmailArtifact({ email }: { email: EmailArtifactContent }) {
         <span aria-hidden="true">Reply / Forward / More</span>
       </div>
       <div className="emailSender">
-        <div className="avatar" aria-hidden="true">{email.senderInitials}</div>
+        <div className="avatar" aria-hidden="true">
+          {email.senderInitials}
+        </div>
         <div>
           <strong>{email.senderName}</strong>
           <p>{email.recipientLine}</p>
@@ -765,7 +906,10 @@ function TicketArtifact({ ticket }: { ticket: TicketArtifactContent }) {
       <h2 id="ticket-title">{ticket.title}</h2>
       <dl>
         {ticket.fields.map((field) => (
-          <div key={field.label}><dt>{field.label}</dt><dd>{field.value}</dd></div>
+          <div key={field.label}>
+            <dt>{field.label}</dt>
+            <dd>{field.value}</dd>
+          </div>
         ))}
       </dl>
       <p>{ticket.description}</p>
@@ -798,13 +942,7 @@ function Notice({
   )
 }
 
-function StatusLine({
-  state,
-  compact = false,
-}: {
-  state: ConnectionState
-  compact?: boolean
-}) {
+function StatusLine({ state, compact = false }: { state: ConnectionState; compact?: boolean }) {
   return (
     <p className={`statusLine ${state} ${compact ? 'compact' : ''}`} aria-live="polite">
       <span aria-hidden="true" />
@@ -826,9 +964,20 @@ function RoleBadge({ role, privacy }: { role: RoleId; privacy: string }) {
 function CountGrid({ snapshot }: { snapshot: ParticipantSnapshot }) {
   return (
     <div className="countGrid" aria-label="Participant counts">
-      <div><strong>{snapshot.lobby.total}/{snapshot.maxParticipants}</strong><span>participants</span></div>
-      <div className="hr"><strong>{snapshot.lobby.hr}</strong><span>HR</span></div>
-      <div className="it-helpdesk"><strong>{snapshot.lobby.it}</strong><span>IT Helpdesk</span></div>
+      <div>
+        <strong>
+          {snapshot.lobby.total}/{snapshot.maxParticipants}
+        </strong>
+        <span>participants</span>
+      </div>
+      <div className="hr">
+        <strong>{snapshot.lobby.hr}</strong>
+        <span>HR</span>
+      </div>
+      <div className="it-helpdesk">
+        <strong>{snapshot.lobby.it}</strong>
+        <span>IT Helpdesk</span>
+      </div>
     </div>
   )
 }
@@ -836,9 +985,20 @@ function CountGrid({ snapshot }: { snapshot: ParticipantSnapshot }) {
 function RoleCountCards({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   return (
     <div className="roleCountCards" aria-label="Role counts">
-      <div><strong>{snapshot.lobby.total}/{snapshot.maxParticipants}</strong><span>Participants</span></div>
-      <div className="hr"><strong>{snapshot.lobby.hr}</strong><span>HR</span></div>
-      <div className="it-helpdesk"><strong>{snapshot.lobby.it}</strong><span>IT Helpdesk</span></div>
+      <div>
+        <strong>
+          {snapshot.lobby.total}/{snapshot.maxParticipants}
+        </strong>
+        <span>Participants</span>
+      </div>
+      <div className="hr">
+        <strong>{snapshot.lobby.hr}</strong>
+        <span>HR</span>
+      </div>
+      <div className="it-helpdesk">
+        <strong>{snapshot.lobby.it}</strong>
+        <span>IT Helpdesk</span>
+      </div>
     </div>
   )
 }
@@ -860,8 +1020,14 @@ function ParticipantList({ participants }: { participants: ParticipantRecord[] }
 function VoteMiniGrid() {
   return (
     <div className="voteMiniGrid">
-      <div><strong>2/3</strong><span>HR votes</span></div>
-      <div><strong>1/3</strong><span>IT votes</span></div>
+      <div>
+        <strong>2/3</strong>
+        <span>HR votes</span>
+      </div>
+      <div>
+        <strong>1/3</strong>
+        <span>IT votes</span>
+      </div>
     </div>
   )
 }

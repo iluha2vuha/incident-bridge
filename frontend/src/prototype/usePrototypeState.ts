@@ -18,9 +18,7 @@ export function usePrototypeState() {
   const [voteVariant, setVoteVariant] = useState<VoteVariant>('open')
 
   const roleContent = roles[role]
-  const selectedChoice = roleContent.choices.find(
-    (choice) => choice.id === selectedChoiceId,
-  )
+  const selectedChoice = roleContent.choices.find((choice) => choice.id === selectedChoiceId)
   const participantSnapshot = buildParticipantSnapshot(role, connection)
   const facilitatorSnapshot = buildFacilitatorSnapshot(lobbyVariant, voteVariant)
 

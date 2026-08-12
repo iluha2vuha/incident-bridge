@@ -30,9 +30,13 @@ describe('Incident Bridge static slice', () => {
 
     await userEvent.click(screen.getByRole('link', { name: /^round$/i }))
 
-    expect(screen.getByText(/sender display name looks like a senior HR employee/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/sender display name looks like a senior HR employee/i),
+    ).toBeInTheDocument()
     expect(screen.getByText(/action required before today's pay run/i)).toBeInTheDocument()
-    expect(screen.queryByText(/password reset was requested for the employee/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/password reset was requested for the employee/i),
+    ).not.toBeInTheDocument()
   })
 
   it('shows only IT Helpdesk private information in the IT round variant', async () => {
@@ -43,7 +47,9 @@ describe('Incident Bridge static slice', () => {
 
     expect(screen.getByText(/password reset was requested for the employee/i)).toBeInTheDocument()
     expect(screen.getByText(/BridgeDesk ticket/i)).toBeInTheDocument()
-    expect(screen.queryByText(/sender display name looks like a senior HR employee/i)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/sender display name looks like a senior HR employee/i),
+    ).not.toBeInTheDocument()
   })
 
   it('supports choice selection and confirmation', async () => {

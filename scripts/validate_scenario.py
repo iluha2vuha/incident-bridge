@@ -15,7 +15,7 @@ DEFAULT_SCENARIO_PATH = REPO_ROOT / "scenarios" / "friday_pay_run.json"
 
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 
-from incident_bridge.scenario import ScenarioDraft
+from incident_bridge.scenario import ScenarioDraft  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
