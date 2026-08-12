@@ -71,6 +71,31 @@ export async function closeLiveSession(session: LiveSessionState): Promise<LiveL
   })
 }
 
+export async function selectParticipantRole(
+  session: LiveSessionState,
+  roleId: string,
+): Promise<LiveLobbySnapshot> {
+  if (!session.participantToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveLobbySnapshot>(`/api/sessions/${session.sessionId}/role`, {
+    method: 'POST',
+    body: JSON.stringify({ participant_token: session.participantToken, role_id: roleId }),
+  })
+}
+
+export async function startLiveSession(session: LiveSessionState): Promise<LiveLobbySnapshot> {
+  if (!session.facilitatorToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveLobbySnapshot>(`/api/sessions/${session.sessionId}/start`, {
+    method: 'POST',
+    body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
+  })
+}
+
 export function lobbyWebSocketUrl(
   sessionId: string,
   actor: LiveSessionState['actor'],

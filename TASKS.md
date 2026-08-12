@@ -56,9 +56,9 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 7 - Role Selection
 
-- [ ] Implement HR and IT Helpdesk role cards.
-- [ ] Show role counts and imbalance warnings.
-- [ ] Lock role selection after start.
+- [x] Implement HR and IT Helpdesk role cards.
+- [x] Show role counts and imbalance warnings.
+- [x] Lock role selection after start.
 
 ## Phase 8 - First Live Round
 

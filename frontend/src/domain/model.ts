@@ -169,14 +169,22 @@ export type LiveParticipant = {
   status: ConnectionState
 }
 
+export type LiveRole = {
+  id: string
+  name: string
+  briefing: string
+}
+
 export type LiveLobbySnapshot = {
   session_id: string
   room_code: string
-  phase: 'lobby' | 'closed'
+  phase: 'lobby' | 'briefing' | 'closed'
   scenario_id: string
   mode: 'quick' | 'standard'
   max_participants: number
   participant_count: number
+  roles: LiveRole[]
+  role_counts: Record<string, number>
   participants: LiveParticipant[]
   warning: string
 }

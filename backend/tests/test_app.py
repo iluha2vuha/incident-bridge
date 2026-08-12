@@ -52,6 +52,50 @@ class AppTest(unittest.TestCase):
         self.assertIn("participant_token", joined)
         self.assertEqual(joined["session_id"], created["session_id"])
         self.assertEqual(joined["lobby"]["participants"][0]["nickname"], "Jordan")
+        self.assertEqual(joined["lobby"]["role_counts"], {"hr": 0, "it-helpdesk": 0})
+
+    def test_select_role_and_start_session(self) -> None:
+        create_response = self.client.post(
+            "/api/sessions",
+            json={"scenario_id": "friday-pay-run", "mode": "standard"},
+        )
+        created = create_response.json()
+        hr_join = self.client.post(
+            "/api/sessions/join",
+            json={"room_code": created["room_code"], "nickname": "Jordan"},
+        ).json()
+        it_join = self.client.post(
+            "/api/sessions/join",
+            json={"room_code": created["room_code"], "nickname": "Morgan"},
+        ).json()
+
+        role_response = self.client.post(
+            f"/api/sessions/{created['session_id']}/role",
+            json={"participant_token": hr_join["participant_token"], "role_id": "hr"},
+        )
+
+        self.assertEqual(role_response.status_code, 200)
+        self.assertEqual(role_response.json()["role_counts"], {"hr": 1, "it-helpdesk": 0})
+
+        self.client.post(
+            f"/api/sessions/{created['session_id']}/role",
+            json={"participant_token": it_join["participant_token"], "role_id": "it-helpdesk"},
+        )
+        start_response = self.client.post(
+            f"/api/sessions/{created['session_id']}/start",
+            json={"facilitator_token": created["facilitator_token"]},
+        )
+
+        self.assertEqual(start_response.status_code, 200)
+        self.assertEqual(start_response.json()["phase"], "briefing")
+
+        locked_response = self.client.post(
+            f"/api/sessions/{created['session_id']}/role",
+            json={"participant_token": hr_join["participant_token"], "role_id": "it-helpdesk"},
+        )
+
+        self.assertEqual(locked_response.status_code, 409)
+        self.assertEqual(locked_response.json()["detail"]["code"], "role_selection_locked")
 
     def test_join_reports_controlled_errors(self) -> None:
         invalid_room = self.client.post(
@@ -98,6 +142,19 @@ class AppTest(unittest.TestCase):
             self.assertEqual(update_message["type"], "lobby:updated")
             self.assertEqual(update_message["lobby"]["participant_count"], 1)
             self.assertEqual(update_message["lobby"]["participants"][0]["nickname"], "Morgan")
+
+            role_response = self.client.post(
+                f"/api/sessions/{created['session_id']}/role",
+                json={
+                    "participant_token": join_response.json()["participant_token"],
+                    "role_id": "it-helpdesk",
+                },
+            )
+
+            self.assertEqual(role_response.status_code, 200)
+            role_message = websocket.receive_json()
+            self.assertEqual(role_message["type"], "lobby:updated")
+            self.assertEqual(role_message["lobby"]["role_counts"]["it-helpdesk"], 1)
 
 
 if __name__ == "__main__":

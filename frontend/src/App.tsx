@@ -17,7 +17,6 @@ import type {
   FacilitatorSnapshot,
   FinalMetric,
   LiveLobbySnapshot,
-  LiveParticipant,
   LiveSessionState,
   MetricDelta,
   ParticipantRecord,
@@ -34,6 +33,8 @@ import {
   createLiveSession,
   joinLiveSession,
   lobbyWebSocketUrl,
+  selectParticipantRole,
+  startLiveSession,
 } from './live/sessionApi'
 import { reviewNavGroups, roles } from './mocks/scenario'
 import { mockSession } from './mocks/session'
@@ -99,7 +100,12 @@ function PrototypeApp() {
             path="/participant/role"
             element={
               <ParticipantShell>
-                <RoleSelection role={state.role} setRole={state.setRole} />
+                <RoleSelection
+                  role={state.role}
+                  setRole={state.setRole}
+                  liveSession={state.liveSession}
+                  setLiveSession={state.setLiveSession}
+                />
               </ParticipantShell>
             }
           />
@@ -480,7 +486,7 @@ function JoinScreen({
     try {
       const session = await joinLiveSession(roomCode, nickname)
       setLiveSession(session)
-      navigate('/participant/lobby')
+      navigate('/participant/role')
     } catch (joinError) {
       setError(joinError instanceof Error ? joinError.message : 'Could not join room.')
     } finally {
@@ -530,13 +536,85 @@ function JoinScreen({
   )
 }
 
-function RoleSelection({ role, setRole }: { role: RoleId; setRole: (role: RoleId) => void }) {
+function RoleSelection({
+  role,
+  setRole,
+  liveSession,
+  setLiveSession,
+}: {
+  role: RoleId
+  setRole: (role: RoleId) => void
+  liveSession: LiveSessionState | null
+  setLiveSession: (session: LiveSessionState | null) => void
+}) {
+  const [error, setError] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const liveParticipant = liveSession?.lobby.participants.find(
+    (participant) => participant.id === liveSession.participantId,
+  )
+  const selectedRoleId = liveSession?.actor === 'participant' ? liveParticipant?.role_id : role
+  const roleOptions =
+    liveSession?.lobby.roles ??
+    Object.values(roles).map((roleContent) => ({
+      id: roleContent.role,
+      name: roleContent.label,
+      briefing: roleContent.briefing,
+    }))
+  const isLocked = liveSession?.lobby.phase !== undefined && liveSession.lobby.phase !== 'lobby'
+
+  async function handleSelect(roleId: string) {
+    setError('')
+
+    if (isRoleId(roleId)) {
+      setRole(roleId)
+    }
+
+    if (liveSession?.actor !== 'participant') {
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      const lobby = await selectParticipantRole(liveSession, roleId)
+      setLiveSession({ ...liveSession, lobby })
+    } catch (selectError) {
+      setError(selectError instanceof Error ? selectError.message : 'Could not select role.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <section className="screenStack">
       <h1>Choose your role</h1>
-      <RoleCard role="hr" selected={role === 'hr'} onSelect={setRole} />
-      <RoleCard role="it-helpdesk" selected={role === 'it-helpdesk'} onSelect={setRole} />
-      <Link className="primaryButton" to="/participant/lobby">
+      {roleOptions.map((roleOption) => (
+        <RoleCard
+          key={roleOption.id}
+          roleId={roleOption.id}
+          label={roleOption.name}
+          briefing={roleOption.briefing}
+          selected={selectedRoleId === roleOption.id}
+          disabled={isLocked || isSaving}
+          onSelect={handleSelect}
+        />
+      ))}
+      {error ? (
+        <Notice tone="warning" live>
+          {error}
+        </Notice>
+      ) : null}
+      {isLocked ? <Notice tone="warning">Role selection is locked.</Notice> : null}
+      <Link
+        className={`primaryButton ${!selectedRoleId || isSaving ? 'disabledLink' : ''}`}
+        aria-disabled={!selectedRoleId || isSaving}
+        onClick={(event) => {
+          if (!selectedRoleId || isSaving) {
+            event.preventDefault()
+          }
+        }}
+        to={selectedRoleId && !isSaving ? '/participant/lobby' : '#'}
+      >
         Continue
       </Link>
       <p className="smallNote">
@@ -548,25 +626,30 @@ function RoleSelection({ role, setRole }: { role: RoleId; setRole: (role: RoleId
 }
 
 function RoleCard({
-  role,
+  roleId,
+  label,
+  briefing,
   selected,
+  disabled = false,
   onSelect,
 }: {
-  role: RoleId
+  roleId: string
+  label: string
+  briefing: string
   selected: boolean
-  onSelect: (role: RoleId) => void
+  disabled?: boolean
+  onSelect: (role: string) => void
 }) {
-  const content = roles[role]
-
   return (
     <button
       type="button"
-      className={`roleCard ${content.role} ${selected ? 'selected' : ''}`}
+      className={`roleCard ${roleId} ${selected ? 'selected' : ''}`}
       aria-pressed={selected}
-      onClick={() => onSelect(role)}
+      disabled={disabled}
+      onClick={() => onSelect(roleId)}
     >
-      <span className="roleTitle">{content.label}</span>
-      <span>{content.briefing}</span>
+      <span className="roleTitle">{label}</span>
+      <span>{briefing}</span>
     </button>
   )
 }
@@ -579,13 +662,20 @@ function ParticipantLobby({
   liveSession: LiveSessionState | null
 }) {
   if (liveSession?.actor === 'participant') {
+    const participant = liveSession.lobby.participants.find(
+      (participant) => participant.id === liveSession.participantId,
+    )
+    const selectedRole = roleName(liveSession.lobby, participant?.role_id)
+
     return (
       <section className="screenStack">
         <StatusLine state="connected" />
         <div>
           <p className="eyebrow">Room</p>
           <h1 className="roomCode">{liveSession.roomCode}</h1>
-          <p className="muted">{liveSession.participantName}, you are in the lobby.</p>
+          <p className="muted">
+            {liveSession.participantName}, you are {selectedRole ?? 'waiting to choose a role'}.
+          </p>
         </div>
         <LiveLobbyCount lobby={liveSession.lobby} />
         {liveSession.lobby.warning ? (
@@ -595,7 +685,12 @@ function ParticipantLobby({
         ) : (
           <Notice tone="neutral">Waiting for the facilitator.</Notice>
         )}
-        <LiveParticipantList participants={liveSession.lobby.participants} />
+        <LiveParticipantList lobby={liveSession.lobby} />
+        {liveSession.lobby.phase === 'lobby' ? (
+          <Link className="secondaryLink" to="/participant/role">
+            Change role before start
+          </Link>
+        ) : null}
       </section>
     )
   }
@@ -919,6 +1014,8 @@ function FacilitatorLobby({
   setLiveSession: (session: LiveSessionState | null) => void
 }) {
   const [closeError, setCloseError] = useState('')
+  const [startError, setStartError] = useState('')
+  const [isStarting, setIsStarting] = useState(false)
 
   async function handleCloseLiveSession() {
     if (!liveSession) {
@@ -935,7 +1032,27 @@ function FacilitatorLobby({
     }
   }
 
+  async function handleStartLiveSession() {
+    if (!liveSession) {
+      return
+    }
+
+    setStartError('')
+    setIsStarting(true)
+
+    try {
+      const lobby = await startLiveSession(liveSession)
+      setLiveSession({ ...liveSession, lobby })
+    } catch (error) {
+      setStartError(error instanceof Error ? error.message : 'Could not start exercise.')
+    } finally {
+      setIsStarting(false)
+    }
+  }
+
   if (liveSession?.actor === 'facilitator') {
+    const canStart = canStartFromLobby(liveSession.lobby)
+
     return (
       <section className="facilitatorStack">
         <div className="facilitatorLobby">
@@ -964,7 +1081,12 @@ function FacilitatorLobby({
                 {closeError}
               </Notice>
             ) : null}
-            <LiveParticipantList participants={liveSession.lobby.participants} />
+            {startError ? (
+              <Notice tone="warning" live>
+                {startError}
+              </Notice>
+            ) : null}
+            <LiveParticipantList lobby={liveSession.lobby} />
             <div className="buttonRow">
               <button
                 type="button"
@@ -974,8 +1096,13 @@ function FacilitatorLobby({
               >
                 End session
               </button>
-              <button type="button" className="primaryButton" disabled>
-                Start exercise
+              <button
+                type="button"
+                className="primaryButton"
+                disabled={!canStart || isStarting || liveSession.lobby.phase !== 'lobby'}
+                onClick={handleStartLiveSession}
+              >
+                {isStarting ? 'Starting...' : 'Start exercise'}
               </button>
             </div>
           </section>
@@ -1436,16 +1563,33 @@ function LiveLobbyCount({ lobby }: { lobby: LiveLobbySnapshot }) {
         </strong>
         <span>participants</span>
       </div>
-      <div>
-        <strong>{lobby.mode}</strong>
-        <span>mode</span>
-      </div>
+      {lobby.roles.map((role) => (
+        <div key={role.id} className={role.id}>
+          <strong>{lobby.role_counts[role.id] ?? 0}</strong>
+          <span>{role.name}</span>
+        </div>
+      ))}
       <div>
         <strong>{lobby.phase}</strong>
         <span>status</span>
       </div>
     </div>
   )
+}
+
+function roleName(lobby: LiveLobbySnapshot, roleId: string | null | undefined): string | null {
+  if (!roleId) {
+    return null
+  }
+
+  return lobby.roles.find((role) => role.id === roleId)?.name ?? roleId
+}
+
+function canStartFromLobby(lobby: LiveLobbySnapshot): boolean {
+  const assignedCount = Object.values(lobby.role_counts).reduce((total, count) => total + count, 0)
+  const everyRoleHasParticipants = lobby.roles.every((role) => (lobby.role_counts[role.id] ?? 0) > 0)
+
+  return lobby.participant_count >= 2 && assignedCount === lobby.participant_count && everyRoleHasParticipants
 }
 
 function ParticipantList({ participants }: { participants: ParticipantRecord[] }) {
@@ -1462,8 +1606,8 @@ function ParticipantList({ participants }: { participants: ParticipantRecord[] }
   )
 }
 
-function LiveParticipantList({ participants }: { participants: LiveParticipant[] }) {
-  if (participants.length === 0) {
+function LiveParticipantList({ lobby }: { lobby: LiveLobbySnapshot }) {
+  if (lobby.participants.length === 0) {
     return (
       <div className="emptyLobby" aria-live="polite">
         No participants have joined yet.
@@ -1473,15 +1617,19 @@ function LiveParticipantList({ participants }: { participants: LiveParticipant[]
 
   return (
     <ul className="participantList" aria-label="Live lobby participants">
-      {participants.map((participant) => (
+      {lobby.participants.map((participant) => (
         <li key={participant.id}>
           <span>{participant.nickname}</span>
-          <span>{participant.role_id ?? 'No role yet'}</span>
+          <span>{roleName(lobby, participant.role_id) ?? 'No role yet'}</span>
           <span>{participant.status}</span>
         </li>
       ))}
     </ul>
   )
+}
+
+function isRoleId(roleId: string): roleId is RoleId {
+  return roleId === 'hr' || roleId === 'it-helpdesk'
 }
 
 function VoteMiniGrid() {

@@ -20,6 +20,7 @@ class SessionManagerTest(unittest.TestCase):
         self.assertGreater(len(response.facilitator_token), 30)
         self.assertIn(response.room_code, response.join_url)
         self.assertEqual(response.lobby.participant_count, 0)
+        self.assertEqual(response.lobby.role_counts, {"hr": 0, "it-helpdesk": 0})
 
     def test_joins_room_with_temporary_participant_token(self) -> None:
         manager = SessionManager()
@@ -33,6 +34,85 @@ class SessionManagerTest(unittest.TestCase):
         self.assertEqual(response.lobby.participant_count, 1)
         self.assertEqual(response.lobby.participants[0].nickname, "Jordan P.")
         self.assertGreater(len(response.participant_token), 30)
+        self.assertEqual(response.lobby.warning, "1 participant still needs a role.")
+
+    def test_selects_role_and_updates_role_counts(self) -> None:
+        manager = SessionManager()
+        session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+        participant = manager.join_session(
+            JoinSessionRequest(room_code=session.room_code, nickname="Jordan"),
+        )
+
+        snapshot = manager.select_role(
+            session.session_id,
+            participant_token=participant.participant_token,
+            role_id="hr",
+        )
+
+        self.assertEqual(snapshot.participants[0].role_id, "hr")
+        self.assertEqual(snapshot.role_counts, {"hr": 1, "it-helpdesk": 0})
+        self.assertEqual(snapshot.warning, "IT Helpdesk has no participants.")
+
+    def test_rejects_invalid_role(self) -> None:
+        manager = SessionManager()
+        session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+        participant = manager.join_session(
+            JoinSessionRequest(room_code=session.room_code, nickname="Jordan"),
+        )
+
+        with self.assertRaisesRegex(SessionError, "Role"):
+            manager.select_role(
+                session.session_id,
+                participant_token=participant.participant_token,
+                role_id="finance",
+            )
+
+    def test_starts_session_and_locks_role_selection(self) -> None:
+        manager = SessionManager()
+        session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+        hr_participant = manager.join_session(
+            JoinSessionRequest(room_code=session.room_code, nickname="Jordan"),
+        )
+        it_participant = manager.join_session(
+            JoinSessionRequest(room_code=session.room_code, nickname="Morgan"),
+        )
+        manager.select_role(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+            role_id="hr",
+        )
+        manager.select_role(
+            session.session_id,
+            participant_token=it_participant.participant_token,
+            role_id="it-helpdesk",
+        )
+
+        started = manager.start_session(session.session_id, session.facilitator_token)
+
+        self.assertEqual(started.phase, "briefing")
+
+        with self.assertRaisesRegex(SessionError, "locked"):
+            manager.select_role(
+                session.session_id,
+                participant_token=hr_participant.participant_token,
+                role_id="it-helpdesk",
+            )
+
+    def test_start_requires_all_participants_to_have_roles(self) -> None:
+        manager = SessionManager()
+        session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+        hr_participant = manager.join_session(
+            JoinSessionRequest(room_code=session.room_code, nickname="Jordan"),
+        )
+        manager.join_session(JoinSessionRequest(room_code=session.room_code, nickname="Morgan"))
+        manager.select_role(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+            role_id="hr",
+        )
+
+        with self.assertRaisesRegex(SessionError, "Every participant"):
+            manager.start_session(session.session_id, session.facilitator_token)
 
     def test_rejects_invalid_room_code(self) -> None:
         manager = SessionManager()

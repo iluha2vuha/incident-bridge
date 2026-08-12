@@ -1,7 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createLiveSession, joinLiveSession, lobbyWebSocketUrl } from './sessionApi'
+import type { LiveLobbySnapshot } from '../domain/model'
+import {
+  createLiveSession,
+  joinLiveSession,
+  lobbyWebSocketUrl,
+  selectParticipantRole,
+  startLiveSession,
+} from './sessionApi'
 
-const lobby = {
+const lobby: LiveLobbySnapshot = {
   session_id: 'session-1',
   room_code: 'AB7K2P',
   phase: 'lobby',
@@ -9,9 +16,25 @@ const lobby = {
   mode: 'standard',
   max_participants: 9,
   participant_count: 0,
+  roles: [
+    {
+      id: 'hr',
+      name: 'HR',
+      briefing: 'Protect employee information.',
+    },
+    {
+      id: 'it-helpdesk',
+      name: 'IT Helpdesk',
+      briefing: 'Secure accounts.',
+    },
+  ],
+  role_counts: {
+    hr: 0,
+    'it-helpdesk': 0,
+  },
   participants: [],
   warning: '',
-} as const
+}
 
 describe('live session API helpers', () => {
   afterEach(() => {
@@ -78,6 +101,51 @@ describe('live session API helpers', () => {
   it('builds an authenticated lobby websocket URL', () => {
     expect(lobbyWebSocketUrl('session-1', 'facilitator', 'facilitator-secret')).toBe(
       'ws://127.0.0.1:8000/ws/sessions/session-1/lobby?facilitator_token=facilitator-secret',
+    )
+  })
+
+  it('selects a participant role', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ...lobby, role_counts: { hr: 1 } }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await selectParticipantRole(
+      {
+        actor: 'participant',
+        sessionId: 'session-1',
+        roomCode: 'AB7K2P',
+        participantToken: 'participant-secret',
+        lobby,
+      },
+      'hr',
+    )
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/role',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ participant_token: 'participant-secret', role_id: 'hr' }),
+      }),
+    )
+  })
+
+  it('starts a live session as facilitator', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ...lobby, phase: 'briefing' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await startLiveSession({
+      actor: 'facilitator',
+      sessionId: 'session-1',
+      roomCode: 'AB7K2P',
+      facilitatorToken: 'facilitator-secret',
+      lobby,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/start',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ facilitator_token: 'facilitator-secret' }),
+      }),
     )
   })
 })

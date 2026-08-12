@@ -18,9 +18,11 @@ from incident_bridge.sessions import (
     JoinSessionRequest,
     JoinSessionResponse,
     LobbySnapshot,
+    SelectRoleRequest,
     SessionError,
     SessionErrorCode,
     SessionManager,
+    StartSessionRequest,
     session_error_payload,
 )
 
@@ -169,6 +171,22 @@ def create_app(
     @app.post("/api/sessions/{session_id}/close", response_model=LobbySnapshot)
     async def close_session(session_id: str, request: CloseSessionRequest) -> LobbySnapshot:
         snapshot = manager.close_session(session_id, request.facilitator_token)
+        await hub.broadcast(snapshot)
+        return snapshot
+
+    @app.post("/api/sessions/{session_id}/role", response_model=LobbySnapshot)
+    async def select_role(session_id: str, request: SelectRoleRequest) -> LobbySnapshot:
+        snapshot = manager.select_role(
+            session_id,
+            participant_token=request.participant_token,
+            role_id=request.role_id,
+        )
+        await hub.broadcast(snapshot)
+        return snapshot
+
+    @app.post("/api/sessions/{session_id}/start", response_model=LobbySnapshot)
+    async def start_session(session_id: str, request: StartSessionRequest) -> LobbySnapshot:
+        snapshot = manager.start_session(session_id, request.facilitator_token)
         await hub.broadcast(snapshot)
         return snapshot
 

@@ -169,6 +169,14 @@ legend,
   cursor: not-allowed;
 }
 
+.disabledLink {
+  background: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--muted);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .secondaryButton[disabled] {
   color: var(--muted);
   cursor: not-allowed;
@@ -279,6 +287,11 @@ input {
   border-color: var(--it);
 }
 
+.roleCard[disabled] {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .roleTitle {
   font-weight: 800;
 }
@@ -304,6 +317,10 @@ input {
 .liveLobbyCount,
 .voteMiniGrid {
   grid-template-columns: repeat(3, 1fr);
+}
+
+.liveLobbyCount {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
 }
 
 .countGrid > div,
