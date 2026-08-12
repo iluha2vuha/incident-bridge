@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:oklch(0.965 0.003 90);}
+  a{color:oklch(0.58 0.12 255);}
+  a:hover{color:oklch(0.5 0.14 255);}
+  ::selection{background:oklch(0.78 0.15 80 / 0.4);}
+</style>
+</helmet>
+
+<div style="--amber:oklch(0.78 0.15 80); --hr:oklch(0.66 0.14 35); --it:oklch(0.58 0.12 255); --green:oklch(0.63 0.13 150); --red:oklch(0.55 0.19 15); font-family:'IBM Plex Sans',sans-serif; color:oklch(0.2 0.01 260); line-height:1.5; max-width:1400px; margin:0 auto; padding:0 32px 120px;">
+
+  <!-- STICKY NAV -->
+  <div style="position:sticky; top:0; z-index:50; background:oklch(0.985 0.002 90 / 0.96); backdrop-filter:blur(6px); border-bottom:1px solid oklch(0.85 0.01 90); margin:0 -32px 40px; padding:14px 32px; display:flex; gap:20px; align-items:center; flex-wrap:wrap; font-size:14px;">
+    <span style="font-weight:700; font-size:15px; letter-spacing:0.01em;">Incident Bridge — Phase 1</span>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-left:auto;">
+      <a href="#sources" style="text-decoration:none;">Sources</a>
+      <a href="#assumptions" style="text-decoration:none;">Assumptions</a>
+      <a href="#inventory" style="text-decoration:none;">Inventory</a>
+      <a href="#flows" style="text-decoration:none;">Flows</a>
+      <a href="#directions" style="text-decoration:none;">Directions</a>
+      <a href="#comparison" style="text-decoration:none;">Comparison</a>
+      <a href="#recommendation" style="text-decoration:none;">Recommendation</a>
+    </div>
+  </div>
+
+  <!-- COVER -->
+  <div style="padding:8px 0 40px;">
+    <div style="display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; letter-spacing:0.08em; color:var(--amber); background:oklch(0.78 0.15 80 / 0.12); border:1px solid oklch(0.78 0.15 80 / 0.35); padding:4px 10px; border-radius:3px; margin-bottom:16px;">PHASE 1 OF 5 — STOP FOR DIRECTION SELECTION</div>
+    <h1 style="font-size:38px; font-weight:700; margin:0 0 12px; letter-spacing:-0.01em;">Incident Bridge — Context Audit &amp; Visual Directions</h1>
+    <p style="font-size:17px; max-width:760px; color:oklch(0.4 0.01 260); margin:0;">A facilitator-led cybersecurity tabletop simulation. This page covers the source audit, full state inventory, flow maps, and three visual directions applied to four representative screens — HR email round, IT ticket round, facilitator lobby, and facilitator round control. Pick a direction (A, B, or C) and I'll build the full design system and prototype from there.</p>
+  </div>
+
+  <!-- SOURCES -->
+  <div id="sources" style="padding:48px 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 6px;">1 · Source Summary</h2>
+    <p style="color:oklch(0.45 0.01 260); margin:0 0 20px; font-size:14px;">Priority order used throughout: Product Spec → Game Design → Learning Objectives → Protocol → Project Constraints → Design Spec → master blueprint prompt → this prompt → my judgement.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px;">
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:oklch(0.5 0.01 260); margin-bottom:6px;">PRODUCT_SPEC.md</div>
+        <div style="font-size:14px;">Purpose, users (2–9 participants, 1 facilitator), MVP feature list, explicit non-goals, privacy principles, success criteria.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:oklch(0.5 0.01 260); margin-bottom:6px;">GAME_DESIGN.md</div>
+        <div style="font-size:14px;">The Friday Pay Run scenario, all 5 rounds with shared/private info, HR + IT choices, effects, cross-role rules, debrief content.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:oklch(0.5 0.01 260); margin-bottom:6px;">LEARNING_OBJECTIVES.md</div>
+        <div style="font-size:14px;">Six behaviours the exercise teaches, mapped to rounds — used to shape debrief and learning-point copy.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:oklch(0.5 0.01 260); margin-bottom:6px;">PROTOCOL.md</div>
+        <div style="font-size:14px;">Future client/server contract — state machine, events, role-filtering rules. Confirms server-authoritative behaviour the UI must imply (no client-side scoring reveals).</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:oklch(0.5 0.01 260); margin-bottom:6px;">PROJECT_CONSTRAINTS.md</div>
+        <div style="font-size:14px;">Confirmed vs assumed vs undecided items. Notably: v1 does not need a projector view or export.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:oklch(0.5 0.01 260); margin-bottom:6px;">DESIGN_SPEC.md</div>
+        <div style="font-size:14px;">Low-fi direction: deep neutral participant base, lighter facilitator surface, amber for active incident, coral/violet HR, cool blue IT, journey-by-journey wireframes, component inventory.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSUMPTIONS -->
+  <div id="assumptions" style="padding:48px 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 20px;">2 · Assumptions &amp; Conflicts</h2>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div style="background:oklch(0.55 0.19 15 / 0.06); border:1px solid oklch(0.55 0.19 15 / 0.3); border-radius:6px; padding:16px;">
+        <div style="font-weight:600; font-size:14px; color:var(--red); margin-bottom:4px;">CONFLICT — participant count</div>
+        <div style="font-size:14px;">The master brief text says 3–15 participants. <b>PRODUCT_SPEC.md (higher priority)</b> says 2–9. Resolved in favor of PRODUCT_SPEC: designs and copy target 2–9 participants across 2 roles.</div>
+      </div>
+      <div style="background:oklch(0.55 0.19 15 / 0.06); border:1px solid oklch(0.55 0.19 15 / 0.3); border-radius:6px; padding:16px;">
+        <div style="font-weight:600; font-size:14px; color:var(--red); margin-bottom:4px;">CONFLICT — projector/public view</div>
+        <div style="font-size:14px;"><b>PROJECT_CONSTRAINTS.md</b> states v1 does not need a projector-specific view; PRODUCT_SPEC lists it under Future Possibilities. The brief's own sections 6, 16 and 18 ask for a full public/projector flow and screens (D01–D04) in this phase. Conservative resolution: I include the public/projector flow map and screens as a labelled <b>future/optional capability</b> — designed now since the brief requests it for review, not treated as committed v1 scope.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:4px;">Assumption — fictional organisation</div>
+        <div style="font-size:14px;">Using the master prompt's own example data (fictional org "Northstar Services", employee "Jordan Patel", sender "Maya Chen — People Operations", <span style="font-family:'IBM Plex Mono',monospace; font-size:13px;">.example</span> domains) since no source above it supplies names and none conflicts with it.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:4px;">Assumption — round 1 IT ticket content</div>
+        <div style="font-size:14px;">The brief's example ticket (§10) shows a full round-2-level compromise timeline. Per GAME_DESIGN's round-by-round reveal, the Round 1 IT ticket in these mockups is scoped down to just the password-reset + unfamiliar-browser signal, matching what GAME_DESIGN actually discloses in round 1.</div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:6px; padding:16px;">
+        <div style="font-weight:600; font-size:14px; margin-bottom:4px;">Assumption — screen IDs</div>
+        <div style="font-size:14px;">Keeping the brief's P00–P09 / F00–F13 / D01–D04 naming exactly as given, since it doesn't conflict with any higher-priority source and gives every state a stable reference for later phases.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div id="inventory" style="padding:48px 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 20px;">3 · Page / State Inventory</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(360px,1fr)); gap:20px;">
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:8px; padding:20px;">
+        <div style="font-weight:700; font-size:15px; margin-bottom:10px; color:var(--hr);">Participant — 10 screens, 30+ states</div>
+        <div style="font-size:13.5px; display:flex; flex-direction:column; gap:6px; font-family:'IBM Plex Mono',monospace;">
+          <div>P00 Prototype index</div><div>P01 Join room — 6 variants</div><div>P02 Choose role — 4 variants</div>
+          <div>P03 Lobby — 4 variants</div><div>P04 Role briefing — HR / IT</div>
+          <div>P05 Round workspace — 10 content variants × 10 interaction states</div>
+          <div>P06 Consequence reveal</div><div>P07 Next-round transition</div>
+          <div>P08 Final debrief</div><div>P09 Session ended</div>
+        </div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:8px; padding:20px;">
+        <div style="font-weight:700; font-size:15px; margin-bottom:10px; color:var(--it);">Facilitator — 14 screens, 25+ states</div>
+        <div style="font-size:13.5px; display:flex; flex-direction:column; gap:6px; font-family:'IBM Plex Mono',monospace;">
+          <div>F00 Prototype index</div><div>F01 Create session — 3 variants</div>
+          <div>F02 Lobby — 6 variants</div><div>F03 Start confirmation</div>
+          <div>F04 Briefing control</div><div>F05 Live round control — 7 variants</div>
+          <div>F06 Lock confirmation</div><div>F07 Department result / tie</div>
+          <div>F08 Consequence reveal control</div><div>F09 Revealed round view</div>
+          <div>F10 Final debrief</div><div>F11 End-session confirmation</div>
+          <div>F12 Session closed</div><div>F13 Disconnected/reconnecting</div>
+        </div>
+      </div>
+      <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:8px; padding:20px;">
+        <div style="font-weight:700; font-size:15px; margin-bottom:10px; color:var(--amber);">Public / projector — 4 screens <span style="font-weight:400; font-size:12px; color:oklch(0.5 0.01 260);">(future/optional, see §2)</span></div>
+        <div style="font-size:13.5px; display:flex; flex-direction:column; gap:6px; font-family:'IBM Plex Mono',monospace;">
+          <div>D01 Join display</div><div>D02 Shared round briefing</div>
+          <div>D03 Public result reveal</div><div>D04 Final public debrief</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOWS -->
+  <div id="flows" style="padding:48px 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 24px;">4 · Flow Maps</h2>
+
+    <div style="margin-bottom:32px;">
+      <div style="font-weight:600; font-size:14px; color:var(--hr); margin-bottom:10px;">Participant</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; font-family:'IBM Plex Mono',monospace;">
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P01 Join</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P02 Role</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P03 Lobby</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P04 Briefing</span>→
+        <span style="background:var(--amber); color:oklch(0.25 0.05 80); padding:6px 10px; border-radius:4px; font-weight:600;">P05 Round ×5</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P06 Consequence</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P07 Transition</span>
+        <span style="opacity:0.5;">(loop to P05 until final round)</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P08 Debrief</span>→
+        <span style="background:oklch(0.66 0.14 35 / 0.12); border:1px solid oklch(0.66 0.14 35 / 0.4); padding:6px 10px; border-radius:4px;">P09 Ended</span>
+      </div>
+      <div style="font-size:13px; color:oklch(0.45 0.01 260); margin-top:8px;">Side branches at every step: disconnect → reconnect restores last known state (per PROTOCOL.md session:reconnect).</div>
+    </div>
+
+    <div style="margin-bottom:32px;">
+      <div style="font-weight:600; font-size:14px; color:var(--it); margin-bottom:10px;">Facilitator</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; font-family:'IBM Plex Mono',monospace;">
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F01 Create</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F02 Lobby</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F03 Confirm start</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F04 Briefing</span>→
+        <span style="background:var(--amber); color:oklch(0.25 0.05 80); padding:6px 10px; border-radius:4px; font-weight:600;">F05 Round control ×5</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F06 Lock</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F07 Result/tie</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F08 Reveal</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F09 Revealed</span>
+        <span style="opacity:0.5;">(loop to F05)</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F10 Debrief</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F11 End confirm</span>→
+        <span style="background:oklch(0.58 0.12 255 / 0.12); border:1px solid oklch(0.58 0.12 255 / 0.4); padding:6px 10px; border-radius:4px;">F12 Closed</span>
+      </div>
+      <div style="font-size:13px; color:oklch(0.45 0.01 260); margin-top:8px;">F13 (disconnected/reconnecting) can interrupt at any point and restores the current phase from a facilitator token — the server, not the client, remains authoritative per PROTOCOL.md.</div>
+    </div>
+
+    <div>
+      <div style="font-weight:600; font-size:14px; color:var(--amber); margin-bottom:10px;">Public / projector <span style="font-weight:400; font-size:12px; color:oklch(0.5 0.01 260);">(future/optional)</span></div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; font-family:'IBM Plex Mono',monospace;">
+        <span style="background:oklch(0.78 0.15 80 / 0.15); border:1px solid oklch(0.78 0.15 80 / 0.5); padding:6px 10px; border-radius:4px;">D01 Join display</span>→
+        <span style="background:oklch(0.78 0.15 80 / 0.15); border:1px solid oklch(0.78 0.15 80 / 0.5); padding:6px 10px; border-radius:4px;">D02 Round briefing</span>→
+        <span style="background:oklch(0.78 0.15 80 / 0.15); border:1px solid oklch(0.78 0.15 80 / 0.5); padding:6px 10px; border-radius:4px;">D03 Result reveal</span>
+        <span style="opacity:0.5;">(loop with facilitator rounds)</span>→
+        <span style="background:oklch(0.78 0.15 80 / 0.15); border:1px solid oklch(0.78 0.15 80 / 0.5); padding:6px 10px; border-radius:4px;">D04 Final debrief</span>
+      </div>
+      <div style="font-size:13px; color:oklch(0.45 0.01 260); margin-top:8px;">Mirrors facilitator phase changes exactly, but strips all role-private content — never shows HR or IT private artefacts or individual votes.</div>
+    </div>
+  </div>
+
+  <!-- DIRECTIONS -->
+  <div id="directions" style="padding:48px 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 6px;">5 · Three Visual Directions</h2>
+    <p style="font-size:14px; color:oklch(0.45 0.01 260); margin:0 0 32px; max-width:800px;">All three keep the DESIGN_SPEC.md colour mandates: amber for active incident, coral for HR, cool blue for IT Helpdesk, green/red reserved for confirmed outcomes and genuine warnings, monospace only for codes/timestamps. They differ in structure, density and mood. Typeface throughout: IBM Plex Sans + IBM Plex Mono.</p>
+
+    <!-- DIRECTION A -->
+    <div style="margin-bottom:56px;">
+      <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:8px;">
+        <h3 style="font-size:19px; font-weight:700; margin:0;">A · Operational Dark</h3>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:oklch(0.5 0.01 260);">dark participant / light facilitator</span>
+      </div>
+      <p style="font-size:14px; max-width:820px; margin:0 0 8px;">Participant screens use a deep neutral, near-black surface — the phone reads like a live incident channel, amber threading through progress and status. The facilitator switches to a bright, structured control-room surface built for reading at a glance while speaking.</p>
+      <div style="display:flex; gap:24px; font-size:13px; margin-bottom:20px; flex-wrap:wrap;">
+        <div><b style="color:var(--green);">Strengths:</b> strong "this is a live incident" feeling; the dark/light split cleanly separates player experience from host tooling; amber reads clearly against dark.</div>
+        <div><b style="color:var(--red);">Risks:</b> dark UI needs careful contrast tuning for outdoor/bright-room phone use; two different base surfaces means twice the surface tokens to maintain.</div>
+      </div>
+
+      <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+        <!-- A: HR email round -->
+        <div style="width:280px; height:600px; border-radius:22px; background:oklch(0.2 0.012 260); border:6px solid oklch(0.12 0.01 260); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 24px oklch(0.2 0 0 / 0.15);">
+          <div style="height:3px; background:var(--amber);"></div>
+          <div style="padding:12px 14px 8px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:oklch(0.7 0.01 260);">ROUND 1 OF 5</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--green);">● connected</span>
+          </div>
+          <div style="padding:0 14px 10px;">
+            <div style="display:inline-flex; align-items:center; gap:5px; background:oklch(0.66 0.14 35 / 0.18); border:1px solid oklch(0.66 0.14 35 / 0.5); color:oklch(0.85 0.08 35); font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:3px;">◆ HR — PRIVATE TO HR</div>
+          </div>
+          <div style="margin:0 14px 10px; background:oklch(0.26 0.012 260); border:1px solid oklch(0.34 0.012 260); border-radius:6px; padding:10px;">
+            <div style="font-size:9.5px; font-weight:600; color:oklch(0.7 0.01 260); letter-spacing:0.05em; margin-bottom:4px;">SHARED INCIDENT UPDATE</div>
+            <div style="font-size:12px; color:oklch(0.9 0.005 260);">An employee reports an urgent message asking them to confirm payroll information before today's pay run.</div>
+          </div>
+          <div style="margin:0 14px; flex:1; overflow:hidden; background:oklch(0.97 0.002 260); border-radius:6px; display:flex; flex-direction:column;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; text-align:center; color:oklch(0.5 0.01 260); padding:3px; background:oklch(0.9 0.005 260);">SIMULATED TRAINING ARTEFACT</div>
+            <div style="padding:9px 11px; border-bottom:1px solid oklch(0.88 0.005 260);">
+              <div style="font-size:11.5px; font-weight:600; color:oklch(0.2 0.01 260);">Maya Chen — People Operations</div>
+              <div style="font-size:9.5px; color:oklch(0.45 0.01 260);">maya.chen@northstar-payroll.example</div>
+              <div style="font-size:9.5px; color:oklch(0.45 0.01 260); margin-top:2px;">to Jordan Patel · 09:07</div>
+            </div>
+            <div style="padding:9px 11px; font-size:11.5px; font-weight:600; color:oklch(0.2 0.01 260);">Action required before today's pay run</div>
+            <div style="padding:0 11px 9px; font-size:11px; color:oklch(0.3 0.01 260); overflow:hidden;">Please confirm your bank details before 11am today.</div>
+          </div>
+          <div style="padding:10px 14px 12px;">
+            <div style="font-size:9.5px; font-weight:600; color:oklch(0.7 0.01 260); letter-spacing:0.05em; margin-bottom:6px;">CHOOSE ONE ACTION</div>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <div style="background:oklch(0.66 0.14 35 / 0.15); border:1.5px solid var(--hr); border-radius:5px; padding:7px 9px; font-size:11px; color:oklch(0.92 0.01 260);">Contact the employee via a trusted channel, preserve the message, escalate</div>
+              <div style="background:oklch(0.26 0.012 260); border:1px solid oklch(0.34 0.012 260); border-radius:5px; padding:7px 9px; font-size:11px; color:oklch(0.75 0.01 260);">Ask the employee to reply for detail while checking payroll records</div>
+              <div style="background:oklch(0.26 0.012 260); border:1px solid oklch(0.34 0.012 260); border-radius:5px; padding:7px 9px; font-size:11px; color:oklch(0.75 0.01 260);">Hold the request until another report confirms a pattern</div>
+            </div>
+            <div style="margin-top:8px; background:var(--amber); color:oklch(0.2 0.05 80); text-align:center; font-weight:600; font-size:12px; padding:9px; border-radius:5px;">Submit decision</div>
+          </div>
+        </div>
+
+        <!-- A: IT ticket round -->
+        <div style="width:280px; height:600px; border-radius:22px; background:oklch(0.2 0.012 260); border:6px solid oklch(0.12 0.01 260); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 24px oklch(0.2 0 0 / 0.15);">
+          <div style="height:3px; background:var(--amber);"></div>
+          <div style="padding:12px 14px 8px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:oklch(0.7 0.01 260);">ROUND 1 OF 5</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--green);">● connected</span>
+          </div>
+          <div style="padding:0 14px 10px;">
+            <div style="display:inline-flex; align-items:center; gap:5px; background:oklch(0.58 0.12 255 / 0.18); border:1px solid oklch(0.58 0.12 255 / 0.5); color:oklch(0.8 0.06 255); font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:3px;">⚙ IT HELPDESK — PRIVATE TO IT HELPDESK</div>
+          </div>
+          <div style="margin:0 14px 10px; background:oklch(0.26 0.012 260); border:1px solid oklch(0.34 0.012 260); border-radius:6px; padding:10px;">
+            <div style="font-size:9.5px; font-weight:600; color:oklch(0.7 0.01 260); letter-spacing:0.05em; margin-bottom:4px;">SHARED INCIDENT UPDATE</div>
+            <div style="font-size:12px; color:oklch(0.9 0.005 260);">An employee reports an urgent message asking them to confirm payroll information before today's pay run.</div>
+          </div>
+          <div style="margin:0 14px; flex:1; overflow:hidden; background:oklch(0.97 0.002 260); border-radius:6px; display:flex; flex-direction:column;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; text-align:center; color:oklch(0.5 0.01 260); padding:3px; background:oklch(0.9 0.005 260);">SIMULATED TRAINING ARTEFACT</div>
+            <div style="padding:8px 11px; border-bottom:1px solid oklch(0.88 0.005 260); display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600;">INC-10427</span>
+              <span style="font-size:9px; background:oklch(0.78 0.15 80 / 0.3); color:oklch(0.4 0.09 80); padding:2px 6px; border-radius:3px; font-weight:600;">NEW</span>
+            </div>
+            <div style="padding:8px 11px; font-size:11px; font-weight:600; color:oklch(0.2 0.01 260);">Password reset requested from unrecognised browser</div>
+            <div style="padding:0 11px 4px; font-size:9.5px; color:oklch(0.45 0.01 260); display:flex; flex-direction:column; gap:2px;">
+              <span>Priority: Medium · Category: Account &amp; authentication</span>
+              <span>Reporter: Jordan Patel · Created 08:54</span>
+            </div>
+            <div style="padding:6px 11px; font-size:10.5px; color:oklch(0.3 0.01 260); overflow:hidden;">Requested from an unrecognised browser.</div>
+          </div>
+          <div style="padding:10px 14px 12px;">
+            <div style="font-size:9.5px; font-weight:600; color:oklch(0.7 0.01 260); letter-spacing:0.05em; margin-bottom:6px;">CHOOSE ONE ACTION</div>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <div style="background:oklch(0.58 0.12 255 / 0.15); border:1.5px solid var(--it); border-radius:5px; padding:7px 9px; font-size:11px; color:oklch(0.92 0.01 260);">Verify the employee via approved channel, review recent activity</div>
+              <div style="background:oklch(0.26 0.012 260); border:1px solid oklch(0.34 0.012 260); border-radius:5px; padding:7px 9px; font-size:11px; color:oklch(0.75 0.01 260);">Reset the password immediately, ask employee to sign in again</div>
+              <div style="background:oklch(0.26 0.012 260); border:1px solid oklch(0.34 0.012 260); border-radius:5px; padding:7px 9px; font-size:11px; color:oklch(0.75 0.01 260);">Log as a routine password-reset ticket</div>
+            </div>
+            <div style="margin-top:8px; background:var(--amber); color:oklch(0.2 0.05 80); text-align:center; font-weight:600; font-size:12px; padding:9px; border-radius:5px;">Submit decision</div>
+          </div>
+        </div>
+
+        <!-- A: Facilitator lobby -->
+        <div style="width:460px; height:290px; border-radius:10px; background:white; border:1px solid oklch(0.87 0.006 260); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 24px oklch(0.2 0 0 / 0.1);">
+          <div style="padding:12px 16px; border-bottom:1px solid oklch(0.9 0.005 260); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; font-size:14px;">Incident Bridge — Lobby</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; background:oklch(0.78 0.15 80 / 0.15); color:oklch(0.4 0.09 80); padding:2px 8px; border-radius:3px; font-weight:600;">WAITING TO START</span>
+          </div>
+          <div style="flex:1; display:flex; gap:14px; padding:14px 16px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+              <div style="width:64px; height:64px; background:repeating-linear-gradient(45deg, oklch(0.2 0.01 260), oklch(0.2 0.01 260) 3px, white 3px, white 6px); border-radius:4px;"></div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:700; letter-spacing:0.06em;">AB7K2P</div>
+              <div style="font-size:9px; color:oklch(0.5 0.01 260);">incident-bridge.example/join</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; gap:8px;">
+                <div style="flex:1; background:oklch(0.97 0.003 260); border-radius:6px; padding:8px 10px; text-align:center;"><div style="font-size:18px; font-weight:700;">6<span style="font-size:11px; font-weight:400; color:oklch(0.5 0.01 260);">/9</span></div><div style="font-size:9.5px; color:oklch(0.5 0.01 260);">participants</div></div>
+                <div style="flex:1; background:oklch(0.66 0.14 35 / 0.1); border-radius:6px; padding:8px 10px; text-align:center;"><div style="font-size:18px; font-weight:700; color:var(--hr);">3</div><div style="font-size:9.5px; color:oklch(0.5 0.01 260);">HR</div></div>
+                <div style="flex:1; background:oklch(0.58 0.12 255 / 0.1); border-radius:6px; padding:8px 10px; text-align:center;"><div style="font-size:18px; font-weight:700; color:var(--it);">3</div><div style="font-size:9.5px; color:oklch(0.5 0.01 260);">IT Helpdesk</div></div>
+              </div>
+              <div style="flex:1; background:oklch(0.97 0.003 260); border-radius:6px; padding:8px; font-size:10.5px; color:oklch(0.4 0.01 260); overflow:hidden;">
+                ● Jordan P. — HR &nbsp; ● Sam R. — IT &nbsp; ● Morgan T. — HR &nbsp; ● Alex K. — IT …
+              </div>
+            </div>
+          </div>
+          <div style="padding:10px 16px; border-top:1px solid oklch(0.9 0.005 260); display:flex; gap:8px; justify-content:flex-end;">
+            <div style="font-size:11.5px; padding:7px 14px; border-radius:5px; border:1px solid oklch(0.85 0.008 260); color:oklch(0.4 0.01 260);">End session</div>
+            <div style="font-size:11.5px; font-weight:600; padding:7px 14px; border-radius:5px; background:var(--amber); color:oklch(0.2 0.05 80);">Start exercise</div>
+          </div>
+        </div>
+
+        <!-- A: Facilitator round control -->
+        <div style="width:460px; height:290px; border-radius:10px; background:white; border:1px solid oklch(0.87 0.006 260); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 24px oklch(0.2 0 0 / 0.1);">
+          <div style="padding:10px 16px; border-bottom:1px solid oklch(0.9 0.005 260);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; font-size:13.5px;">Round 1 of 5 — The Suspicious Payroll Request</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; background:var(--amber); color:oklch(0.2 0.05 80); padding:2px 8px; border-radius:3px; font-weight:600;">VOTING OPEN</span>
+            </div>
+            <div style="font-size:11px; color:oklch(0.45 0.01 260); margin-top:3px;">An employee reports an urgent message asking them to confirm payroll information before today's pay run.</div>
+          </div>
+          <div style="flex:1; display:flex; gap:10px; padding:10px 16px;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <div style="background:oklch(0.66 0.14 35 / 0.1); border-radius:5px; padding:6px 9px; display:flex; justify-content:space-between; font-size:11px;"><span style="color:var(--hr); font-weight:600;">HR</span><span style="font-family:'IBM Plex Mono',monospace;">2/3 votes</span></div>
+              <div style="background:oklch(0.58 0.12 255 / 0.1); border-radius:5px; padding:6px 9px; display:flex; justify-content:space-between; font-size:11px;"><span style="color:var(--it); font-weight:600;">IT Helpdesk</span><span style="font-family:'IBM Plex Mono',monospace;">1/3 votes</span></div>
+              <div style="background:oklch(0.55 0.19 15 / 0.08); border:1px solid oklch(0.55 0.19 15 / 0.3); border-radius:5px; padding:6px 9px; font-size:10px; color:var(--red);">⚠ Missing: Morgan (HR), Sam &amp; Alex (IT)</div>
+              <div style="flex:1; background:oklch(0.97 0.003 260); border-radius:5px; padding:7px 9px; font-size:9.5px; color:oklch(0.45 0.01 260);"><b style="display:block; color:oklch(0.3 0.01 260); font-size:10px; margin-bottom:2px;">PRIVATE FACILITATOR NOTE</b>Watch for HR/IT talking before voting — that's the win condition here.</div>
+            </div>
+            <div style="width:120px; display:flex; flex-direction:column; gap:6px;">
+              <div style="flex:1; background:oklch(0.2 0.012 260); border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:9px; color:oklch(0.6 0.01 260); font-family:'IBM Plex Mono',monospace;">projector preview</div>
+              <div style="text-align:center; font-weight:600; font-size:11.5px; padding:8px; border-radius:5px; background:var(--amber); color:oklch(0.2 0.05 80);">Lock voting</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION B -->
+    <div style="margin-bottom:56px;">
+      <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:8px;">
+        <h3 style="font-size:19px; font-weight:700; margin:0;">B · Unified Enterprise Workspace</h3>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:oklch(0.5 0.01 260);">one high-contrast surface, both roles</span>
+      </div>
+      <p style="font-size:14px; max-width:820px; margin:0 0 8px;">Participant and facilitator share the exact same light, high-contrast, black-bordered surface language — dense, modular, SaaS-like. Nothing about the palette shifts between roles; only layout density and control count change. Feels like one coherent internal tool used by everyone in the room.</p>
+      <div style="display:flex; gap:24px; font-size:13px; margin-bottom:20px; flex-wrap:wrap;">
+        <div><b style="color:var(--green);">Strengths:</b> single design language to build and maintain; strong legibility and structure; scales cleanly to dense facilitator screens.</div>
+        <div><b style="color:var(--red);">Risks:</b> can read closer to a generic admin tool if borders/weights aren't handled with restraint; less "incident room" atmosphere on the phone.</div>
+      </div>
+
+      <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+        <!-- B: HR email round -->
+        <div style="width:280px; height:600px; border-radius:14px; background:oklch(0.99 0 0); border:2px solid oklch(0.15 0.01 260); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:10px 14px; border-bottom:2px solid oklch(0.15 0.01 260); display:flex; justify-content:space-between;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600;">ROUND 1/5</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px;">● CONNECTED</span>
+          </div>
+          <div style="padding:8px 14px 0;">
+            <div style="display:inline-block; background:oklch(0.2 0.01 260); color:white; font-size:10px; font-weight:700; letter-spacing:0.04em; padding:3px 8px;">HR · PRIVATE TO HR</div>
+          </div>
+          <div style="margin:8px 14px; border:2px solid oklch(0.15 0.01 260); padding:9px;">
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">SHARED INCIDENT UPDATE</div>
+            <div style="font-size:12px;">An employee reports an urgent message asking them to confirm payroll information before today's pay run.</div>
+          </div>
+          <div style="margin:0 14px; flex:1; overflow:hidden; border:2px solid oklch(0.15 0.01 260); display:flex; flex-direction:column;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; text-align:center; padding:3px; border-bottom:1px solid oklch(0.8 0.005 260);">SIMULATED TRAINING ARTEFACT</div>
+            <div style="padding:9px 11px; border-bottom:1px solid oklch(0.8 0.005 260);">
+              <div style="font-size:11.5px; font-weight:700;">Maya Chen — People Operations</div>
+              <div style="font-size:9.5px; color:oklch(0.4 0.01 260);">maya.chen@northstar-payroll.example</div>
+              <div style="font-size:9.5px; color:oklch(0.4 0.01 260); margin-top:2px;">to Jordan Patel · 09:07</div>
+            </div>
+            <div style="padding:9px 11px; font-size:11.5px; font-weight:700;">Action required before today's pay run</div>
+            <div style="padding:0 11px 9px; font-size:11px; color:oklch(0.25 0.01 260);">Please confirm your bank details before 11am today.</div>
+          </div>
+          <div style="padding:10px 14px 12px;">
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.05em; margin-bottom:6px;">CHOOSE ONE ACTION</div>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <div style="background:var(--hr); color:white; border:2px solid oklch(0.15 0.01 260); padding:7px 9px; font-size:11px; font-weight:600;">Contact the employee via a trusted channel, preserve the message, escalate</div>
+              <div style="border:1px solid oklch(0.6 0.005 260); padding:7px 9px; font-size:11px;">Ask the employee to reply for detail while checking payroll records</div>
+              <div style="border:1px solid oklch(0.6 0.005 260); padding:7px 9px; font-size:11px;">Hold the request until another report confirms a pattern</div>
+            </div>
+            <div style="margin-top:8px; background:oklch(0.15 0.01 260); color:white; text-align:center; font-weight:700; font-size:12px; padding:9px;">SUBMIT DECISION</div>
+          </div>
+        </div>
+
+        <!-- B: IT ticket round -->
+        <div style="width:280px; height:600px; border-radius:14px; background:oklch(0.99 0 0); border:2px solid oklch(0.15 0.01 260); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:10px 14px; border-bottom:2px solid oklch(0.15 0.01 260); display:flex; justify-content:space-between;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600;">ROUND 1/5</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px;">● CONNECTED</span>
+          </div>
+          <div style="padding:8px 14px 0;">
+            <div style="display:inline-block; background:oklch(0.2 0.01 260); color:white; font-size:10px; font-weight:700; letter-spacing:0.04em; padding:3px 8px;">IT HELPDESK · PRIVATE TO IT HELPDESK</div>
+          </div>
+          <div style="margin:8px 14px; border:2px solid oklch(0.15 0.01 260); padding:9px;">
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">SHARED INCIDENT UPDATE</div>
+            <div style="font-size:12px;">An employee reports an urgent message asking them to confirm payroll information before today's pay run.</div>
+          </div>
+          <div style="margin:0 14px; flex:1; overflow:hidden; border:2px solid oklch(0.15 0.01 260); display:flex; flex-direction:column;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; text-align:center; padding:3px; border-bottom:1px solid oklch(0.8 0.005 260);">SIMULATED TRAINING ARTEFACT</div>
+            <div style="padding:8px 11px; border-bottom:1px solid oklch(0.8 0.005 260); display:flex; justify-content:space-between;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700;">INC-10427</span>
+              <span style="font-size:9px; background:oklch(0.15 0.01 260); color:white; padding:2px 6px; font-weight:600;">NEW</span>
+            </div>
+            <div style="padding:8px 11px; font-size:11px; font-weight:700;">Password reset requested from unrecognised browser</div>
+            <div style="padding:0 11px 4px; font-size:9.5px; color:oklch(0.4 0.01 260); display:flex; flex-direction:column; gap:2px;">
+              <span>Priority: Medium · Category: Account &amp; authentication</span>
+              <span>Reporter: Jordan Patel · Created 08:54</span>
+            </div>
+            <div style="padding:6px 11px; font-size:10.5px; color:oklch(0.25 0.01 260);">Requested from an unrecognised browser.</div>
+          </div>
+          <div style="padding:10px 14px 12px;">
+            <div style="font-size:9.5px; font-weight:700; letter-spacing:0.05em; margin-bottom:6px;">CHOOSE ONE ACTION</div>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <div style="background:var(--it); color:white; border:2px solid oklch(0.15 0.01 260); padding:7px 9px; font-size:11px; font-weight:600;">Verify the employee via approved channel, review recent activity</div>
+              <div style="border:1px solid oklch(0.6 0.005 260); padding:7px 9px; font-size:11px;">Reset the password immediately, ask employee to sign in again</div>
+              <div style="border:1px solid oklch(0.6 0.005 260); padding:7px 9px; font-size:11px;">Log as a routine password-reset ticket</div>
+            </div>
+            <div style="margin-top:8px; background:oklch(0.15 0.01 260); color:white; text-align:center; font-weight:700; font-size:12px; padding:9px;">SUBMIT DECISION</div>
+          </div>
+        </div>
+
+        <!-- B: Facilitator lobby -->
+        <div style="width:460px; height:290px; border-radius:8px; background:oklch(0.99 0 0); border:2px solid oklch(0.15 0.01 260); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:11px 16px; border-bottom:2px solid oklch(0.15 0.01 260); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; font-size:14px;">INCIDENT BRIDGE — LOBBY</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; background:oklch(0.15 0.01 260); color:white; padding:2px 8px; font-weight:600;">WAITING TO START</span>
+          </div>
+          <div style="flex:1; display:flex; padding:14px 16px; gap:14px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; border-right:2px solid oklch(0.15 0.01 260); padding-right:14px;">
+              <div style="width:64px; height:64px; background:repeating-linear-gradient(45deg, oklch(0.15 0.01 260), oklch(0.15 0.01 260) 3px, white 3px, white 6px);"></div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:700; letter-spacing:0.06em;">AB7K2P</div>
+              <div style="font-size:9px; color:oklch(0.4 0.01 260);">incident-bridge.example/join</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; gap:0; border:1px solid oklch(0.15 0.01 260);">
+                <div style="flex:1; padding:8px 10px; text-align:center; border-right:1px solid oklch(0.15 0.01 260);"><div style="font-size:18px; font-weight:700;">6<span style="font-size:11px; font-weight:400;">/9</span></div><div style="font-size:9.5px;">participants</div></div>
+                <div style="flex:1; padding:8px 10px; text-align:center; border-right:1px solid oklch(0.15 0.01 260); background:var(--hr); color:white;"><div style="font-size:18px; font-weight:700;">3</div><div style="font-size:9.5px;">HR</div></div>
+                <div style="flex:1; padding:8px 10px; text-align:center; background:var(--it); color:white;"><div style="font-size:18px; font-weight:700;">3</div><div style="font-size:9.5px;">IT Helpdesk</div></div>
+              </div>
+              <div style="flex:1; border:1px solid oklch(0.15 0.01 260); padding:8px; font-size:10.5px; overflow:hidden;">
+                ● Jordan P. — HR &nbsp; ● Sam R. — IT &nbsp; ● Morgan T. — HR &nbsp; ● Alex K. — IT …
+              </div>
+            </div>
+          </div>
+          <div style="padding:10px 16px; border-top:2px solid oklch(0.15 0.01 260); display:flex; gap:8px; justify-content:flex-end;">
+            <div style="font-size:11.5px; font-weight:600; padding:7px 14px; border:1px solid oklch(0.15 0.01 260);">END SESSION</div>
+            <div style="font-size:11.5px; font-weight:700; padding:7px 14px; background:oklch(0.15 0.01 260); color:white;">START EXERCISE</div>
+          </div>
+        </div>
+
+        <!-- B: Facilitator round control -->
+        <div style="width:460px; height:290px; border-radius:8px; background:oklch(0.99 0 0); border:2px solid oklch(0.15 0.01 260); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:9px 16px; border-bottom:2px solid oklch(0.15 0.01 260);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; font-size:13.5px;">ROUND 1/5 — THE SUSPICIOUS PAYROLL REQUEST</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; background:var(--amber); color:oklch(0.2 0.05 80); padding:2px 8px; font-weight:700;">VOTING OPEN</span>
+            </div>
+            <div style="font-size:11px; color:oklch(0.35 0.01 260); margin-top:3px;">An employee reports an urgent message asking them to confirm payroll information before today's pay run.</div>
+          </div>
+          <div style="flex:1; display:flex; gap:0; padding:10px 16px;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px; padding-right:10px; border-right:1px solid oklch(0.15 0.01 260);">
+              <div style="border:1px solid oklch(0.15 0.01 260); padding:6px 9px; display:flex; justify-content:space-between; font-size:11px;"><span style="color:var(--hr); font-weight:700;">HR</span><span style="font-family:'IBM Plex Mono',monospace;">2/3</span></div>
+              <div style="border:1px solid oklch(0.15 0.01 260); padding:6px 9px; display:flex; justify-content:space-between; font-size:11px;"><span style="color:var(--it); font-weight:700;">IT HELPDESK</span><span style="font-family:'IBM Plex Mono',monospace;">1/3</span></div>
+              <div style="background:oklch(0.15 0.01 260); color:white; padding:6px 9px; font-size:10px;">⚠ MISSING: MORGAN (HR), SAM &amp; ALEX (IT)</div>
+              <div style="flex:1; border:1px solid oklch(0.6 0.005 260); padding:7px 9px; font-size:9.5px;"><b style="display:block; font-size:10px; margin-bottom:2px;">PRIVATE FACILITATOR NOTE</b>Watch for HR/IT talking before voting.</div>
+            </div>
+            <div style="width:120px; display:flex; flex-direction:column; gap:6px; padding-left:10px;">
+              <div style="flex:1; border:1px dashed oklch(0.5 0.005 260); display:flex; align-items:center; justify-content:center; font-size:9px; color:oklch(0.4 0.01 260); font-family:'IBM Plex Mono',monospace;">projector preview</div>
+              <div style="text-align:center; font-weight:700; font-size:11.5px; padding:8px; background:oklch(0.15 0.01 260); color:white;">LOCK VOTING</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION C -->
+    <div>
+      <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:8px;">
+        <h3 style="font-size:19px; font-weight:700; margin:0;">C · Editorial Incident Briefing</h3>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:oklch(0.5 0.01 260);">document-like, calm, warm paper tone</span>
+      </div>
+      <p style="font-size:14px; max-width:820px; margin:0 0 8px;">A warm, paper-toned surface used by both roles. Artefacts are framed as labelled exhibits rather than app cards; chrome is minimal — thin rules, restrained buttons — and generous whitespace slows the read down deliberately, in keeping with a briefing document rather than a dashboard.</p>
+      <div style="display:flex; gap:24px; font-size:13px; margin-bottom:20px; flex-wrap:wrap;">
+        <div><b style="color:var(--green);">Strengths:</b> distinctive and calm — matches "serious but not alarmist"; the exhibit framing makes artefacts feel more like real evidence, less like generic UI cards.</div>
+        <div><b style="color:var(--red);">Risks:</b> lower visual urgency could undersell time pressure in a live room; needs disciplined typography to stay crisp rather than precious, and controls need care to stay obviously tappable/clickable despite minimal chrome.</div>
+      </div>
+
+      <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+        <!-- C: HR email round -->
+        <div style="width:280px; height:600px; border-radius:4px; background:oklch(0.965 0.01 75); border:1px solid oklch(0.8 0.012 75); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px 8px; border-bottom:1px solid oklch(0.8 0.012 75); display:flex; justify-content:space-between;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:oklch(0.45 0.01 60);">ROUND 1 OF 5</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--green);">connected</span>
+          </div>
+          <div style="padding:10px 16px 0; font-size:10.5px; letter-spacing:0.06em; color:var(--hr); font-weight:600;">HR — PRIVATE TO HR</div>
+          <div style="padding:10px 16px; font-size:12.5px; color:oklch(0.28 0.015 60); border-bottom:1px solid oklch(0.82 0.012 75); font-style:italic;">"An employee reports an urgent message asking them to confirm payroll information before today's pay run."</div>
+          <div style="margin:12px 16px; flex:1; overflow:hidden; background:white; border:1px solid oklch(0.82 0.012 75); display:flex; flex-direction:column;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; color:oklch(0.5 0.01 60); padding:4px 10px; border-bottom:1px solid oklch(0.88 0.008 75);">EXHIBIT A — EMAIL · SIMULATED TRAINING ARTEFACT</div>
+            <div style="padding:9px 11px; border-bottom:1px solid oklch(0.9 0.006 75);">
+              <div style="font-size:11.5px; font-weight:600; color:oklch(0.22 0.015 60);">Maya Chen — People Operations</div>
+              <div style="font-size:9.5px; color:oklch(0.5 0.015 60);">maya.chen@northstar-payroll.example</div>
+              <div style="font-size:9.5px; color:oklch(0.5 0.015 60); margin-top:2px;">to Jordan Patel · 09:07</div>
+            </div>
+            <div style="padding:9px 11px; font-size:11.5px; font-weight:600; color:oklch(0.22 0.015 60);">Action required before today's pay run</div>
+            <div style="padding:0 11px 9px; font-size:11px; color:oklch(0.32 0.015 60);">Please confirm your bank details before 11am today.</div>
+          </div>
+          <div style="padding:10px 16px 14px;">
+            <div style="font-size:10px; color:oklch(0.45 0.01 60); margin-bottom:6px;">Choose one action</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="border-left:3px solid var(--hr); background:white; padding:7px 9px; font-size:11px; color:oklch(0.22 0.015 60);">Contact the employee via a trusted channel, preserve the message, escalate</div>
+              <div style="border-left:3px solid oklch(0.82 0.012 75); padding:7px 9px; font-size:11px; color:oklch(0.4 0.015 60);">Ask the employee to reply for detail while checking payroll records</div>
+              <div style="border-left:3px solid oklch(0.82 0.012 75); padding:7px 9px; font-size:11px; color:oklch(0.4 0.015 60);">Hold the request until another report confirms a pattern</div>
+            </div>
+            <div style="margin-top:10px; border:1px solid var(--hr); color:var(--hr); text-align:center; font-weight:600; font-size:12px; padding:8px;">Submit decision</div>
+          </div>
+        </div>
+
+        <!-- C: IT ticket round -->
+        <div style="width:280px; height:600px; border-radius:4px; background:oklch(0.965 0.01 75); border:1px solid oklch(0.8 0.012 75); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px 8px; border-bottom:1px solid oklch(0.8 0.012 75); display:flex; justify-content:space-between;">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:oklch(0.45 0.01 60);">ROUND 1 OF 5</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--green);">connected</span>
+          </div>
+          <div style="padding:10px 16px 0; font-size:10.5px; letter-spacing:0.06em; color:var(--it); font-weight:600;">IT HELPDESK — PRIVATE TO IT HELPDESK</div>
+          <div style="padding:10px 16px; font-size:12.5px; color:oklch(0.28 0.015 60); border-bottom:1px solid oklch(0.82 0.012 75); font-style:italic;">"An employee reports an urgent message asking them to confirm payroll information before today's pay run."</div>
+          <div style="margin:12px 16px; flex:1; overflow:hidden; background:white; border:1px solid oklch(0.82 0.012 75); display:flex; flex-direction:column;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:8px; color:oklch(0.5 0.01 60); padding:4px 10px; border-bottom:1px solid oklch(0.88 0.008 75);">EXHIBIT B — TICKET · SIMULATED TRAINING ARTEFACT</div>
+            <div style="padding:8px 11px; border-bottom:1px solid oklch(0.9 0.006 75); display:flex; justify-content:space-between;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600;">INC-10427</span>
+              <span style="font-size:9px; color:var(--amber); font-weight:600;">NEW</span>
+            </div>
+            <div style="padding:8px 11px; font-size:11px; font-weight:600; color:oklch(0.22 0.015 60);">Password reset requested from unrecognised browser</div>
+            <div style="padding:0 11px 4px; font-size:9.5px; color:oklch(0.5 0.015 60); display:flex; flex-direction:column; gap:2px;">
+              <span>Priority: Medium · Category: Account &amp; authentication</span>
+              <span>Reporter: Jordan Patel · Created 08:54</span>
+            </div>
+            <div style="padding:6px 11px; font-size:10.5px; color:oklch(0.32 0.015 60);">Requested from an unrecognised browser.</div>
+          </div>
+          <div style="padding:10px 16px 14px;">
+            <div style="font-size:10px; color:oklch(0.45 0.01 60); margin-bottom:6px;">Choose one action</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="border-left:3px solid var(--it); background:white; padding:7px 9px; font-size:11px; color:oklch(0.22 0.015 60);">Verify the employee via approved channel, review recent activity</div>
+              <div style="border-left:3px solid oklch(0.82 0.012 75); padding:7px 9px; font-size:11px; color:oklch(0.4 0.015 60);">Reset the password immediately, ask employee to sign in again</div>
+              <div style="border-left:3px solid oklch(0.82 0.012 75); padding:7px 9px; font-size:11px; color:oklch(0.4 0.015 60);">Log as a routine password-reset ticket</div>
+            </div>
+            <div style="margin-top:10px; border:1px solid var(--it); color:var(--it); text-align:center; font-weight:600; font-size:12px; padding:8px;">Submit decision</div>
+          </div>
+        </div>
+
+        <!-- C: Facilitator lobby -->
+        <div style="width:460px; height:290px; border-radius:4px; background:oklch(0.965 0.01 75); border:1px solid oklch(0.8 0.012 75); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 18px; border-bottom:1px solid oklch(0.8 0.012 75); display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; font-size:14px; color:oklch(0.24 0.015 60);">Incident Bridge — Lobby</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--amber); font-weight:600;">Waiting to start</span>
+          </div>
+          <div style="flex:1; display:flex; gap:18px; padding:14px 18px;">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding-right:16px; border-right:1px solid oklch(0.8 0.012 75);">
+              <div style="width:60px; height:60px; background:repeating-linear-gradient(45deg, oklch(0.5 0.02 75), oklch(0.5 0.02 75) 3px, transparent 3px, transparent 6px); border:1px solid oklch(0.8 0.012 75);"></div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600; letter-spacing:0.06em; color:oklch(0.24 0.015 60);">AB7K2P</div>
+              <div style="font-size:9px; color:oklch(0.5 0.015 60);">incident-bridge.example/join</div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; gap:16px;">
+                <div><div style="font-size:17px; font-weight:600; color:oklch(0.24 0.015 60);">6<span style="font-size:11px; font-weight:400; color:oklch(0.5 0.015 60);">/9</span></div><div style="font-size:9.5px; color:oklch(0.5 0.015 60);">participants</div></div>
+                <div><div style="font-size:17px; font-weight:600; color:var(--hr);">3</div><div style="font-size:9.5px; color:oklch(0.5 0.015 60);">HR</div></div>
+                <div><div style="font-size:17px; font-weight:600; color:var(--it);">3</div><div style="font-size:9.5px; color:oklch(0.5 0.015 60);">IT Helpdesk</div></div>
+              </div>
+              <div style="flex:1; font-size:10.5px; color:oklch(0.4 0.015 60); line-height:1.7;">Jordan P. — HR · Sam R. — IT · Morgan T. — HR · Alex K. — IT …</div>
+            </div>
+          </div>
+          <div style="padding:10px 18px; border-top:1px solid oklch(0.8 0.012 75); display:flex; gap:10px; justify-content:flex-end;">
+            <div style="font-size:11.5px; color:oklch(0.45 0.015 60);">End session</div>
+            <div style="font-size:11.5px; font-weight:600; border:1px solid var(--amber); color:oklch(0.35 0.09 80); padding:6px 14px;">Start exercise</div>
+          </div>
+        </div>
+
+        <!-- C: Facilitator round control -->
+        <div style="width:460px; height:290px; border-radius:4px; background:oklch(0.965 0.01 75); border:1px solid oklch(0.8 0.012 75); overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:10px 18px; border-bottom:1px solid oklch(0.8 0.012 75);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:700; font-size:13.5px; color:oklch(0.24 0.015 60);">Round 1 of 5 — The Suspicious Payroll Request</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--amber); font-weight:600;">Voting open</span>
+            </div>
+            <div style="font-size:11px; color:oklch(0.45 0.015 60); margin-top:3px; font-style:italic;">"An employee reports an urgent message asking them to confirm payroll information before today's pay run."</div>
+          </div>
+          <div style="flex:1; display:flex; gap:14px; padding:10px 18px;">
+            <div style="flex:1; display:flex; flex-direction:column; gap:7px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding-bottom:5px; border-bottom:1px solid oklch(0.85 0.01 75);"><span style="color:var(--hr); font-weight:600;">HR</span><span style="font-family:'IBM Plex Mono',monospace; color:oklch(0.4 0.015 60);">2/3 votes</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; padding-bottom:5px; border-bottom:1px solid oklch(0.85 0.01 75);"><span style="color:var(--it); font-weight:600;">IT Helpdesk</span><span style="font-family:'IBM Plex Mono',monospace; color:oklch(0.4 0.015 60);">1/3 votes</span></div>
+              <div style="font-size:10px; color:var(--red);">⚠ Missing: Morgan (HR), Sam &amp; Alex (IT)</div>
+              <div style="flex:1; font-size:9.5px; color:oklch(0.4 0.015 60); border-top:1px solid oklch(0.85 0.01 75); padding-top:6px;"><b style="display:block; font-size:10px; color:oklch(0.25 0.015 60); margin-bottom:2px;">Private facilitator note</b>Watch for HR/IT talking before voting.</div>
+            </div>
+            <div style="width:120px; display:flex; flex-direction:column; gap:8px;">
+              <div style="flex:1; border:1px solid oklch(0.8 0.012 75); display:flex; align-items:center; justify-content:center; font-size:9px; color:oklch(0.5 0.015 60); font-family:'IBM Plex Mono',monospace;">projector preview</div>
+              <div style="text-align:center; font-weight:600; font-size:11.5px; padding:7px; border:1px solid var(--amber); color:oklch(0.35 0.09 80);">Lock voting</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARISON -->
+  <div id="comparison" style="padding:48px 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 20px;">6 · Direction Comparison</h2>
+    <div style="overflow-x:auto;">
+      <table style="border-collapse:collapse; width:100%; font-size:13.5px;">
+        <tr style="border-bottom:2px solid oklch(0.15 0.01 260);">
+          <td style="padding:8px 12px; font-weight:700;"></td>
+          <td style="padding:8px 12px; font-weight:700;">A · Operational Dark</td>
+          <td style="padding:8px 12px; font-weight:700;">B · Unified Enterprise</td>
+          <td style="padding:8px 12px; font-weight:700;">C · Editorial Briefing</td>
+        </tr>
+        <tr style="border-bottom:1px solid oklch(0.88 0.008 90);"><td style="padding:8px 12px; color:oklch(0.45 0.01 260);">Incident-room feeling</td><td style="padding:8px 12px;">Strongest</td><td style="padding:8px 12px;">Moderate</td><td style="padding:8px 12px;">Calm, lower urgency</td></tr>
+        <tr style="border-bottom:1px solid oklch(0.88 0.008 90);"><td style="padding:8px 12px; color:oklch(0.45 0.01 260);">Facilitator-while-speaking clarity</td><td style="padding:8px 12px;">Good</td><td style="padding:8px 12px;">Strongest — dense, structured</td><td style="padding:8px 12px;">Good, needs disciplined hierarchy</td></tr>
+        <tr style="border-bottom:1px solid oklch(0.88 0.008 90);"><td style="padding:8px 12px; color:oklch(0.45 0.01 260);">Build/maintain cost</td><td style="padding:8px 12px;">Higher — two base surfaces</td><td style="padding:8px 12px;">Lowest — one surface</td><td style="padding:8px 12px;">Medium</td></tr>
+        <tr style="border-bottom:1px solid oklch(0.88 0.008 90);"><td style="padding:8px 12px; color:oklch(0.45 0.01 260);">Artefact realism</td><td style="padding:8px 12px;">Good</td><td style="padding:8px 12px;">Good</td><td style="padding:8px 12px;">Strongest — exhibit framing</td></tr>
+        <tr style="border-bottom:1px solid oklch(0.88 0.008 90);"><td style="padding:8px 12px; color:oklch(0.45 0.01 260);">Portfolio distinctiveness</td><td style="padding:8px 12px;">Good</td><td style="padding:8px 12px;">Moderate — closer to familiar SaaS</td><td style="padding:8px 12px;">Strongest</td></tr>
+        <tr><td style="padding:8px 12px; color:oklch(0.45 0.01 260);">Outdoor/bright-room phone use</td><td style="padding:8px 12px;">Needs contrast tuning</td><td style="padding:8px 12px;">Strongest — light throughout</td><td style="padding:8px 12px;">Strong — light throughout</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div id="recommendation" style="padding:48px 0 0; border-top:1px solid oklch(0.85 0.01 90);">
+    <h2 style="font-size:24px; font-weight:700; margin:0 0 16px;">7 · Recommendation</h2>
+    <div style="background:white; border:1px solid oklch(0.88 0.008 90); border-radius:8px; padding:24px; max-width:820px;">
+      <p style="font-size:15px; margin:0 0 12px;"><b>Recommended: A · Operational Dark.</b> It matches DESIGN_SPEC.md's own stated direction most closely (deep neutral participant base, lighter facilitator surface, amber for active incident), gives participants the strongest "this is live" read on a phone in a room full of people voting at once, and gives the facilitator a bright, legible control surface built for glancing while talking.</p>
+      <p style="font-size:14px; margin:0 0 12px; color:oklch(0.4 0.01 260);">C is a close second if a calmer, more distinctive portfolio piece matters more than incident urgency — it's the strongest for realistic artefact presentation. B is the safest, cheapest build if unifying every screen under one visual system outweighs atmosphere.</p>
+      <p style="font-size:13.5px; margin:0; color:oklch(0.5 0.01 260);">All three carry forward unchanged into Phase 2 regardless of pick — reply with A, B, or C (or a mix, e.g. "A's participant screens with C's artefact framing").</p>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+</body>
+</html>
