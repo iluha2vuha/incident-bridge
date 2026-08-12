@@ -36,7 +36,7 @@ Note: `docs/SCENARIO_DRY_REVIEW.md` records an agent-assisted pre-test review, b
 - [ ] Add React + TypeScript + Vite frontend skeleton.
 - [ ] Add FastAPI + Pydantic backend skeleton.
 - [ ] Add test, lint, and formatting commands.
-- [ ] Add scenario validation command.
+- [x] Add scenario validation command.
 - [ ] Add minimal CI only after local commands exist.
 
 ## Phase 5 - Static Interface

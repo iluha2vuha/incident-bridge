@@ -43,8 +43,17 @@ No database, user accounts, chat, runtime AI, complex admin system, or multi-ser
 docs/       Source-of-truth product, game, protocol, architecture, threat, and constraint docs
 design/     UX flow, wireframe, and design direction docs
 scenarios/  Human-readable draft scenario source
+scripts/    Small repo-level utility commands
 AGENTS.md   Rules for future AI coding agents
 TASKS.md    Ordered backlog and scope boundaries
+```
+
+## Scenario Validation
+
+Run the default Friday Pay Run scenario validation with:
+
+```sh
+python3 scripts/validate_scenario.py
 ```
 
 ## Roadmap
