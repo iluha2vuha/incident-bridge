@@ -4,6 +4,7 @@ import type {
   ConnectionState,
   FacilitatorLobbyVariant,
   LiveLobbySnapshot,
+  LiveRoundSnapshot,
   LiveSessionState,
   RoleId,
   VoteVariant,
@@ -19,6 +20,7 @@ export function usePrototypeState() {
   const [lobbyVariant, setLobbyVariant] = useState<FacilitatorLobbyVariant>('ready')
   const [voteVariant, setVoteVariant] = useState<VoteVariant>('open')
   const [liveSession, setLiveSession] = useState<LiveSessionState | null>(null)
+  const [liveRound, setLiveRound] = useState<LiveRoundSnapshot | null>(null)
 
   const roleContent = roles[role]
   const selectedChoice = roleContent.choices.find((choice) => choice.id === selectedChoiceId)
@@ -51,6 +53,8 @@ export function usePrototypeState() {
     liveSession,
     setLiveSession,
     updateLiveLobby,
+    liveRound,
+    setLiveRound,
     participantSnapshot,
     facilitatorSnapshot,
   }

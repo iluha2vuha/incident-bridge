@@ -2,18 +2,33 @@ from __future__ import annotations
 
 import secrets
 import string
+import json
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Callable, Literal, Optional, Sequence
+from pathlib import Path
+from typing import Callable, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+from incident_bridge.scenario import ScenarioChoice, ScenarioDraft, ScenarioRound
 
 
 MAX_PARTICIPANTS = 9
 SESSION_TTL = timedelta(hours=2)
 ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 NICKNAME_ALLOWED = set(string.ascii_letters + string.digits + " .'-")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_SCENARIO_PATH = REPO_ROOT / "scenarios" / "friday_pay_run.json"
+SessionPhase = Literal[
+    "lobby",
+    "briefing",
+    "round_open",
+    "round_locked",
+    "consequence_revealed",
+    "closed",
+]
 
 
 @dataclass(frozen=True)
@@ -23,26 +38,6 @@ class SessionRole:
     briefing: str
 
 
-DEFAULT_ROLES: tuple[SessionRole, ...] = (
-    SessionRole(
-        id="hr",
-        name="HR",
-        briefing=(
-            "Protect employee information, keep payroll moving, support employee trust, "
-            "verify sensitive requests, and escalate appropriately."
-        ),
-    ),
-    SessionRole(
-        id="it-helpdesk",
-        name="IT Helpdesk",
-        briefing=(
-            "Verify identity, secure accounts, preserve evidence, contain compromise, "
-            "investigate wider impact, and avoid unnecessary disruption."
-        ),
-    ),
-)
-
-
 class SessionErrorCode(str, Enum):
     INVALID_ROOM_CODE = "invalid_room_code"
     CLOSED_ROOM = "closed_room"
@@ -50,10 +45,17 @@ class SessionErrorCode(str, Enum):
     ROOM_FULL = "room_full"
     INVALID_NICKNAME = "invalid_nickname"
     INVALID_ROLE = "invalid_role"
+    INVALID_CHOICE = "invalid_choice"
+    DUPLICATE_VOTE = "duplicate_vote"
+    STALE_ROUND = "stale_round_id"
+    VOTE_AFTER_LOCK = "vote_after_lock"
     PERMISSION_DENIED = "permission_denied"
     ROLE_SELECTION_LOCKED = "role_selection_locked"
+    ROUND_NOT_OPEN = "round_not_open"
+    ROUND_NOT_LOCKED = "round_not_locked"
     SESSION_NOT_FOUND = "session_not_found"
     START_BLOCKED = "start_blocked"
+    TIE_REQUIRES_RESOLUTION = "tie_requires_resolution"
 
 
 class SessionError(Exception):
@@ -80,7 +82,7 @@ class RoleView(BaseModel):
 class LobbySnapshot(BaseModel):
     session_id: str
     room_code: str
-    phase: Literal["lobby", "briefing", "closed"]
+    phase: SessionPhase
     scenario_id: str
     mode: Literal["quick", "standard"]
     max_participants: int
@@ -147,6 +149,73 @@ class StartSessionRequest(BaseModel):
     facilitator_token: str
 
 
+class FacilitatorTokenRequest(BaseModel):
+    facilitator_token: str
+
+
+class SubmitVoteRequest(BaseModel):
+    participant_token: str
+    round_id: str = Field(min_length=1)
+    choice_id: str = Field(min_length=1)
+
+
+class RoundChoiceView(BaseModel):
+    id: str
+    label: str
+
+
+class ParticipantRoundRoleView(BaseModel):
+    id: str
+    name: str
+    briefing: str
+    private_information: str
+    choices: list[RoundChoiceView]
+
+
+class RoundResultChoiceView(BaseModel):
+    role_id: str
+    role_name: str
+    choice_id: str
+    choice_label: str
+
+
+class MetricDeltaView(BaseModel):
+    id: str
+    name: str
+    delta: int
+    value: int
+
+
+class RoundResultView(BaseModel):
+    public_consequence: str
+    interaction_summaries: list[str]
+    decisions: list[RoundResultChoiceView]
+    metric_deltas: list[MetricDeltaView]
+    learning_point: str
+
+
+class VoteProgressView(BaseModel):
+    role_id: str
+    role_name: str
+    submitted: int
+    expected: int
+
+
+class RoundSnapshot(BaseModel):
+    session_id: str
+    phase: SessionPhase
+    round_id: str
+    round_number: int
+    total_rounds: int
+    title: str
+    shared_update: str
+    role: Optional[ParticipantRoundRoleView] = None
+    vote_submitted: bool = False
+    vote_progress: list[VoteProgressView] = Field(default_factory=list)
+    facilitator_note: Optional[str] = None
+    result: Optional[RoundResultView] = None
+
+
 @dataclass
 class Participant:
     id: str
@@ -163,6 +232,27 @@ class Participant:
         return "disconnected"
 
 
+@dataclass(frozen=True)
+class AcceptedVote:
+    participant_id: str
+    role_id: str
+    choice_id: str
+
+
+@dataclass(frozen=True)
+class RoundDecision:
+    role_id: str
+    choice_id: str
+
+
+@dataclass
+class RoundResult:
+    decisions: dict[str, RoundDecision]
+    metric_deltas: dict[str, int]
+    metric_values: dict[str, int]
+    interaction_summaries: list[str]
+
+
 @dataclass
 class GameSession:
     id: str
@@ -170,12 +260,23 @@ class GameSession:
     facilitator_token: str
     scenario_id: str
     mode: Literal["quick", "standard"]
+    scenario: ScenarioDraft
     expires_at: datetime
     roles: tuple[SessionRole, ...]
     max_participants: int = MAX_PARTICIPANTS
-    phase: Literal["lobby", "briefing"] = "lobby"
+    phase: Literal[
+        "lobby",
+        "briefing",
+        "round_open",
+        "round_locked",
+        "consequence_revealed",
+    ] = "lobby"
     closed: bool = False
     participants: dict[str, Participant] = field(default_factory=dict)
+    current_round_id: Optional[str] = None
+    votes: dict[str, AcceptedVote] = field(default_factory=dict)
+    round_result: Optional[RoundResult] = None
+    flags: set[str] = field(default_factory=set)
 
     def snapshot(self) -> LobbySnapshot:
         role_counts = self.role_counts()
@@ -256,11 +357,11 @@ class SessionManager:
         *,
         now: Optional[Callable[[], datetime]] = None,
         join_url_base: str = "http://localhost:5173/participant/join",
-        available_roles: Sequence[SessionRole] = DEFAULT_ROLES,
+        scenarios: Optional[dict[str, ScenarioDraft]] = None,
     ) -> None:
         self._now = now or (lambda: datetime.now(timezone.utc))
         self._join_url_base = join_url_base
-        self._available_roles = tuple(available_roles)
+        self._scenarios = scenarios or load_builtin_scenarios()
         self._sessions: dict[str, GameSession] = {}
         self._room_codes: dict[str, str] = {}
 
@@ -270,7 +371,9 @@ class SessionManager:
         scenario_id: str,
         mode: Literal["quick", "standard"],
     ) -> CreateSessionResponse:
-        if scenario_id != "friday-pay-run":
+        scenario = self._scenarios.get(scenario_id)
+
+        if not scenario:
             raise SessionError(
                 SessionErrorCode.SESSION_NOT_FOUND,
                 "Scenario is not available.",
@@ -283,8 +386,12 @@ class SessionManager:
             facilitator_token=secrets.token_urlsafe(32),
             scenario_id=scenario_id,
             mode=mode,
+            scenario=scenario,
             expires_at=self._now() + SESSION_TTL,
-            roles=self._available_roles,
+            roles=tuple(
+                SessionRole(id=role.id, name=role.name, briefing=role.briefing)
+                for role in scenario.roles
+            ),
         )
         self._sessions[session.id] = session
         self._room_codes[session.room_code] = session.id
@@ -388,6 +495,132 @@ class SessionManager:
         session.phase = "briefing"
         return session.snapshot()
 
+    def open_round(self, session_id: str, facilitator_token: str) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_facilitator(session, facilitator_token)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase == "lobby":
+            raise SessionError(
+                SessionErrorCode.ROUND_NOT_OPEN,
+                "Exercise must be started before opening a round.",
+                400,
+            )
+
+        if session.current_round_id is None:
+            session.current_round_id = self._round_ids(session)[0]
+            session.votes.clear()
+            session.round_result = None
+
+        if session.phase == "briefing":
+            session.phase = "round_open"
+
+        return self.round_for_token(session_id, facilitator_token=facilitator_token)
+
+    def round_for_token(
+        self,
+        session_id: str,
+        *,
+        facilitator_token: Optional[str] = None,
+        participant_token: Optional[str] = None,
+    ) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        participant: Optional[Participant] = None
+
+        if facilitator_token:
+            self._ensure_facilitator(session, facilitator_token)
+        elif participant_token:
+            participant = self._participant_for_token(session, participant_token)
+        else:
+            raise SessionError(SessionErrorCode.PERMISSION_DENIED, "Permission denied.", 403)
+
+        round_ = self._current_round(session)
+        return self._round_snapshot(session, round_, participant)
+
+    def submit_vote(
+        self,
+        session_id: str,
+        *,
+        participant_token: str,
+        round_id: str,
+        choice_id: str,
+    ) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase != "round_open":
+            raise SessionError(SessionErrorCode.VOTE_AFTER_LOCK, "Voting is not open.", 409)
+
+        if round_id != session.current_round_id:
+            raise SessionError(SessionErrorCode.STALE_ROUND, "Round ID is stale.", 409)
+
+        participant = self._participant_for_token(session, participant_token)
+
+        if participant.id in session.votes:
+            raise SessionError(
+                SessionErrorCode.DUPLICATE_VOTE,
+                "Vote has already been accepted.",
+                409,
+            )
+
+        if not participant.role_id:
+            raise SessionError(SessionErrorCode.INVALID_ROLE, "Participant has no role.", 400)
+
+        round_ = self._current_round(session)
+        self._choice_for_role(round_, participant.role_id, choice_id)
+        session.votes[participant.id] = AcceptedVote(
+            participant_id=participant.id,
+            role_id=participant.role_id,
+            choice_id=choice_id,
+        )
+
+        return self._round_snapshot(session, round_, participant)
+
+    def lock_round(self, session_id: str, facilitator_token: str) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_facilitator(session, facilitator_token)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase != "round_open":
+            raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not open.", 409)
+
+        round_ = self._current_round(session)
+        session.round_result = self._calculate_round_result(session, round_)
+        session.phase = "round_locked"
+
+        return self._round_snapshot(session, round_, None)
+
+    def reveal_round(self, session_id: str, facilitator_token: str) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_facilitator(session, facilitator_token)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase != "round_locked":
+            raise SessionError(SessionErrorCode.ROUND_NOT_LOCKED, "Round is not locked.", 409)
+
+        if session.round_result is None:
+            raise SessionError(SessionErrorCode.ROUND_NOT_LOCKED, "Round result is missing.", 409)
+
+        session.phase = "consequence_revealed"
+        return self._round_snapshot(session, self._current_round(session), None)
+
     def lobby_for_token(
         self,
         session_id: str,
@@ -417,6 +650,228 @@ class SessionManager:
         self._ensure_facilitator(session, facilitator_token)
         self._ensure_not_expired(session)
         return session.snapshot()
+
+    def _round_snapshot(
+        self,
+        session: GameSession,
+        round_: ScenarioRound,
+        participant: Optional[Participant],
+    ) -> RoundSnapshot:
+        round_ids = self._round_ids(session)
+        role = None
+        vote_submitted = False
+
+        if participant is not None:
+            if not participant.role_id:
+                raise SessionError(SessionErrorCode.INVALID_ROLE, "Participant has no role.", 400)
+
+            session_role = self._role(session, participant.role_id)
+            role = ParticipantRoundRoleView(
+                id=session_role.id,
+                name=session_role.name,
+                briefing=session_role.briefing,
+                private_information=round_.role_information[session_role.id],
+                choices=[
+                    RoundChoiceView(id=choice.id, label=choice.label)
+                    for choice in round_.choices[session_role.id]
+                ],
+            )
+            vote_submitted = participant.id in session.votes
+
+        return RoundSnapshot(
+            session_id=session.id,
+            phase="closed" if session.closed else session.phase,
+            round_id=round_.id,
+            round_number=round_ids.index(round_.id) + 1,
+            total_rounds=len(round_ids),
+            title=round_.title,
+            shared_update=round_.shared_update,
+            role=role,
+            vote_submitted=vote_submitted,
+            vote_progress=self._vote_progress(session),
+            facilitator_note=None if participant is not None else round_.facilitator_note,
+            result=(
+                self._result_view(session, round_)
+                if session.round_result
+                and (participant is None or session.phase == "consequence_revealed")
+                else None
+            ),
+        )
+
+    def _vote_progress(self, session: GameSession) -> list[VoteProgressView]:
+        expected_counts = session.role_counts()
+        submitted_counts = {role.id: 0 for role in session.roles}
+
+        for vote in session.votes.values():
+            submitted_counts[vote.role_id] = submitted_counts.get(vote.role_id, 0) + 1
+
+        return [
+            VoteProgressView(
+                role_id=role.id,
+                role_name=role.name,
+                submitted=submitted_counts[role.id],
+                expected=expected_counts[role.id],
+            )
+            for role in session.roles
+        ]
+
+    def _calculate_round_result(
+        self,
+        session: GameSession,
+        round_: ScenarioRound,
+    ) -> RoundResult:
+        decisions: dict[str, RoundDecision] = {}
+
+        for role in session.roles:
+            role_votes = [
+                vote.choice_id for vote in session.votes.values() if vote.role_id == role.id
+            ]
+
+            if not role_votes:
+                raise SessionError(
+                    SessionErrorCode.START_BLOCKED,
+                    f"{role.name} needs at least one vote before locking.",
+                    400,
+                )
+
+            counts = Counter(role_votes)
+            top_count = max(counts.values())
+            top_choices = [
+                choice_id for choice_id, count in counts.items() if count == top_count
+            ]
+
+            if len(top_choices) > 1:
+                raise SessionError(
+                    SessionErrorCode.TIE_REQUIRES_RESOLUTION,
+                    f"{role.name} has a tied vote.",
+                    409,
+                )
+
+            decisions[role.id] = RoundDecision(role_id=role.id, choice_id=top_choices[0])
+
+        metric_deltas = {metric.id: 0 for metric in session.scenario.metrics}
+        result_flags = set(session.flags)
+
+        for decision in decisions.values():
+            choice = self._choice_for_role(round_, decision.role_id, decision.choice_id)
+            self._add_effects(metric_deltas, choice.effects)
+            result_flags.update(choice.adds_flags)
+
+        interaction_summaries: list[str] = []
+
+        for rule in round_.interaction_rules:
+            conditions = rule.conditions
+
+            if conditions.choices and not all(
+                decisions[role_id].choice_id == choice_id
+                for role_id, choice_id in conditions.choices.items()
+            ):
+                continue
+
+            if conditions.present_flags and not set(conditions.present_flags).issubset(
+                result_flags
+            ):
+                continue
+
+            if conditions.absent_flags and set(conditions.absent_flags).intersection(result_flags):
+                continue
+
+            self._add_effects(metric_deltas, rule.effects)
+            result_flags.update(rule.adds_flags)
+            interaction_summaries.append(rule.result_text)
+
+        session.flags = result_flags
+        metric_values = {
+            metric.id: min(
+                metric.maximum,
+                max(metric.minimum, metric.initial_value + metric_deltas[metric.id]),
+            )
+            for metric in session.scenario.metrics
+        }
+
+        return RoundResult(
+            decisions=decisions,
+            metric_deltas=metric_deltas,
+            metric_values=metric_values,
+            interaction_summaries=interaction_summaries,
+        )
+
+    def _result_view(self, session: GameSession, round_: ScenarioRound) -> RoundResultView:
+        if session.round_result is None:
+            raise SessionError(SessionErrorCode.ROUND_NOT_LOCKED, "Round result is missing.", 409)
+
+        decisions = []
+
+        for role in session.roles:
+            decision = session.round_result.decisions[role.id]
+            choice = self._choice_for_role(round_, role.id, decision.choice_id)
+            decisions.append(
+                RoundResultChoiceView(
+                    role_id=role.id,
+                    role_name=role.name,
+                    choice_id=choice.id,
+                    choice_label=choice.label,
+                )
+            )
+
+        return RoundResultView(
+            public_consequence=round_.public_consequence,
+            interaction_summaries=session.round_result.interaction_summaries,
+            decisions=decisions,
+            metric_deltas=[
+                MetricDeltaView(
+                    id=metric.id,
+                    name=metric.name,
+                    delta=session.round_result.metric_deltas[metric.id],
+                    value=session.round_result.metric_values[metric.id],
+                )
+                for metric in session.scenario.metrics
+            ],
+            learning_point=round_.learning_point,
+        )
+
+    def _round_ids(self, session: GameSession) -> list[str]:
+        mode = (
+            session.scenario.modes.quick
+            if session.mode == "quick"
+            else session.scenario.modes.standard
+        )
+        return mode.round_ids
+
+    def _current_round(self, session: GameSession) -> ScenarioRound:
+        if session.current_round_id is None:
+            raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not open.", 404)
+
+        for round_ in session.scenario.rounds:
+            if round_.id == session.current_round_id:
+                return round_
+
+        raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not available.", 404)
+
+    def _choice_for_role(
+        self,
+        round_: ScenarioRound,
+        role_id: str,
+        choice_id: str,
+    ) -> ScenarioChoice:
+        choices = round_.choices.get(role_id, [])
+
+        for choice in choices:
+            if choice.id == choice_id:
+                return choice
+
+        raise SessionError(SessionErrorCode.INVALID_CHOICE, "Choice was not recognised.", 400)
+
+    def _role(self, session: GameSession, role_id: str) -> SessionRole:
+        for role in session.roles:
+            if role.id == role_id:
+                return role
+
+        raise SessionError(SessionErrorCode.INVALID_ROLE, "Role was not recognised.", 400)
+
+    def _add_effects(self, target: dict[str, int], effects: dict[str, int]) -> None:
+        for metric_id, value in effects.items():
+            target[metric_id] = target.get(metric_id, 0) + value
 
     def _session_for_room_code(self, room_code: str) -> GameSession:
         session_id = self._room_codes.get(room_code)
@@ -492,3 +947,9 @@ class SessionManager:
 
 def session_error_payload(error: SessionError) -> dict[str, str]:
     return {"code": error.code.value, "message": error.message}
+
+
+def load_builtin_scenarios() -> dict[str, ScenarioDraft]:
+    payload = json.loads(DEFAULT_SCENARIO_PATH.read_text(encoding="utf-8"))
+    scenario = ScenarioDraft.model_validate(payload)
+    return {scenario.id: scenario}

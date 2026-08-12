@@ -114,6 +114,100 @@ class SessionManagerTest(unittest.TestCase):
         with self.assertRaisesRegex(SessionError, "Every participant"):
             manager.start_session(session.session_id, session.facilitator_token)
 
+    def test_opens_first_round_with_role_filtered_participant_content(self) -> None:
+        manager = SessionManager()
+        session, hr_participant, _it_participant = create_started_session(manager)
+
+        facilitator_round = manager.open_round(session.session_id, session.facilitator_token)
+        participant_round = manager.round_for_token(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+        )
+
+        self.assertEqual(facilitator_round.phase, "round_open")
+        self.assertEqual(facilitator_round.round_number, 1)
+        self.assertEqual(facilitator_round.role, None)
+        self.assertIn("Strong outcomes preserve", facilitator_round.facilitator_note or "")
+        self.assertEqual(participant_round.role.id if participant_round.role else "", "hr")
+        self.assertIn("sender display name", participant_round.role.private_information)
+        self.assertNotIn("password reset", participant_round.model_dump_json())
+        self.assertEqual(len(participant_round.role.choices), 4)
+
+    def test_accepts_one_vote_per_participant(self) -> None:
+        manager = SessionManager()
+        session, hr_participant, _it_participant = create_started_session(manager)
+        round_snapshot = manager.open_round(session.session_id, session.facilitator_token)
+
+        accepted = manager.submit_vote(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+            round_id=round_snapshot.round_id,
+            choice_id="hr-r1-secure-contact-escalate",
+        )
+
+        self.assertTrue(accepted.vote_submitted)
+
+        with self.assertRaisesRegex(SessionError, "already"):
+            manager.submit_vote(
+                session.session_id,
+                participant_token=hr_participant.participant_token,
+                round_id=round_snapshot.round_id,
+                choice_id="hr-r1-watch-for-pattern",
+            )
+
+    def test_locks_aggregates_and_reveals_first_round_result(self) -> None:
+        manager = SessionManager()
+        session, hr_participant, it_participant = create_started_session(manager)
+        round_snapshot = manager.open_round(session.session_id, session.facilitator_token)
+        manager.submit_vote(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+            round_id=round_snapshot.round_id,
+            choice_id="hr-r1-secure-contact-escalate",
+        )
+        manager.submit_vote(
+            session.session_id,
+            participant_token=it_participant.participant_token,
+            round_id=round_snapshot.round_id,
+            choice_id="it-r1-verify-and-review",
+        )
+
+        locked = manager.lock_round(session.session_id, session.facilitator_token)
+
+        self.assertEqual(locked.phase, "round_locked")
+        self.assertIsNotNone(locked.result)
+        self.assertEqual(len(locked.result.decisions), 2)
+        self.assertIn("connect the payroll message", locked.result.interaction_summaries[0])
+        metric_deltas = {metric.id: metric.delta for metric in locked.result.metric_deltas}
+        self.assertEqual(metric_deltas["incident_control"], 27)
+        self.assertEqual(metric_deltas["evidence_quality"], 28)
+
+        participant_locked = manager.round_for_token(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+        )
+        self.assertIsNone(participant_locked.result)
+
+        with self.assertRaisesRegex(SessionError, "not open"):
+            manager.submit_vote(
+                session.session_id,
+                participant_token=hr_participant.participant_token,
+                round_id=round_snapshot.round_id,
+                choice_id="hr-r1-watch-for-pattern",
+            )
+
+        revealed = manager.reveal_round(session.session_id, session.facilitator_token)
+
+        self.assertEqual(revealed.phase, "consequence_revealed")
+        self.assertIsNotNone(revealed.result)
+        self.assertIn("being treated as suspicious", revealed.result.public_consequence)
+
+        participant_revealed = manager.round_for_token(
+            session.session_id,
+            participant_token=hr_participant.participant_token,
+        )
+        self.assertIsNotNone(participant_revealed.result)
+
     def test_rejects_invalid_room_code(self) -> None:
         manager = SessionManager()
 
@@ -152,6 +246,30 @@ class SessionManagerTest(unittest.TestCase):
 
         with self.assertRaisesRegex(SessionError, "expired"):
             manager.join_session(JoinSessionRequest(room_code=session.room_code, nickname="Jordan"))
+
+
+def create_started_session(
+    manager: SessionManager,
+) -> tuple[object, object, object]:
+    session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+    hr_participant = manager.join_session(
+        JoinSessionRequest(room_code=session.room_code, nickname="Jordan"),
+    )
+    it_participant = manager.join_session(
+        JoinSessionRequest(room_code=session.room_code, nickname="Morgan"),
+    )
+    manager.select_role(
+        session.session_id,
+        participant_token=hr_participant.participant_token,
+        role_id="hr",
+    )
+    manager.select_role(
+        session.session_id,
+        participant_token=it_participant.participant_token,
+        role_id="it-helpdesk",
+    )
+    manager.start_session(session.session_id, session.facilitator_token)
+    return session, hr_participant, it_participant
 
 
 if __name__ == "__main__":

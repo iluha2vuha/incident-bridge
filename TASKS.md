@@ -62,10 +62,10 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 8 - First Live Round
 
-- [ ] Open round 1.
-- [ ] Send role-filtered content.
-- [ ] Submit one accepted vote per participant.
-- [ ] Lock voting, aggregate by role, and reveal a result.
+- [x] Open round 1.
+- [x] Send role-filtered content.
+- [x] Submit one accepted vote per participant.
+- [x] Lock voting, aggregate by role, and reveal a result.
 
 ## Phase 9 - Generic Game Engine
 

@@ -17,7 +17,10 @@ import type {
   FacilitatorSnapshot,
   FinalMetric,
   LiveLobbySnapshot,
+  LiveMetricDelta,
+  LiveRoundSnapshot,
   LiveSessionState,
+  LiveVoteProgress,
   MetricDelta,
   ParticipantRecord,
   ParticipantSnapshot,
@@ -31,10 +34,15 @@ import type {
 import {
   closeLiveSession,
   createLiveSession,
+  getLiveRound,
   joinLiveSession,
+  lockLiveRound,
   lobbyWebSocketUrl,
+  openLiveRound,
+  revealLiveRound,
   selectParticipantRole,
   startLiveSession,
+  submitLiveVote,
 } from './live/sessionApi'
 import { reviewNavGroups, roles } from './mocks/scenario'
 import { mockSession } from './mocks/session'
@@ -124,7 +132,7 @@ function PrototypeApp() {
             path="/participant/briefing"
             element={
               <ParticipantShell>
-                <RoleBriefing snapshot={state.participantSnapshot} />
+                <RoleBriefing snapshot={state.participantSnapshot} liveSession={state.liveSession} />
               </ParticipantShell>
             }
           />
@@ -132,7 +140,13 @@ function PrototypeApp() {
             path="/participant/round"
             element={
               <ParticipantShell>
-                <RoundWorkspace {...state} mode="decision" />
+                <RoundWorkspace
+                  {...state}
+                  mode="decision"
+                  liveSession={state.liveSession}
+                  liveRound={state.liveRound}
+                  setLiveRound={state.setLiveRound}
+                />
               </ParticipantShell>
             }
           />
@@ -140,7 +154,13 @@ function PrototypeApp() {
             path="/participant/waiting"
             element={
               <ParticipantShell>
-                <RoundWorkspace {...state} mode="waiting" />
+                <RoundWorkspace
+                  {...state}
+                  mode="waiting"
+                  liveSession={state.liveSession}
+                  liveRound={state.liveRound}
+                  setLiveRound={state.setLiveRound}
+                />
               </ParticipantShell>
             }
           />
@@ -148,7 +168,12 @@ function PrototypeApp() {
             path="/participant/result"
             element={
               <ParticipantShell>
-                <ParticipantResult snapshot={state.participantSnapshot} />
+                <ParticipantResult
+                  snapshot={state.participantSnapshot}
+                  liveSession={state.liveSession}
+                  liveRound={state.liveRound}
+                  setLiveRound={state.setLiveRound}
+                />
               </ParticipantShell>
             }
           />
@@ -209,6 +234,9 @@ function PrototypeApp() {
                   snapshot={state.facilitatorSnapshot}
                   variant={state.voteVariant}
                   setVariant={state.setVoteVariant}
+                  liveSession={state.liveSession}
+                  liveRound={state.liveRound}
+                  setLiveRound={state.setLiveRound}
                 />
               </FacilitatorShell>
             }
@@ -691,6 +719,21 @@ function ParticipantLobby({
             Change role before start
           </Link>
         ) : null}
+        {liveSession.lobby.phase === 'briefing' ? (
+          <Link className="primaryButton" to="/participant/briefing">
+            View briefing
+          </Link>
+        ) : null}
+        {liveSession.lobby.phase === 'round_open' || liveSession.lobby.phase === 'round_locked' ? (
+          <Link className="primaryButton" to="/participant/round">
+            Go to round
+          </Link>
+        ) : null}
+        {liveSession.lobby.phase === 'consequence_revealed' ? (
+          <Link className="primaryButton" to="/participant/result">
+            View result
+          </Link>
+        ) : null}
       </section>
     )
   }
@@ -714,7 +757,37 @@ function ParticipantLobby({
   )
 }
 
-function RoleBriefing({ snapshot }: { snapshot: ParticipantSnapshot }) {
+function RoleBriefing({
+  snapshot,
+  liveSession,
+}: {
+  snapshot: ParticipantSnapshot
+  liveSession: LiveSessionState | null
+}) {
+  if (liveSession?.actor === 'participant') {
+    const participant = liveSession.lobby.participants.find(
+      (participant) => participant.id === liveSession.participantId,
+    )
+    const role = liveSession.lobby.roles.find((role) => role.id === participant?.role_id)
+
+    if (role) {
+      return (
+        <section className="screenStack">
+          <RoleBadgeByLabel roleId={role.id} label={role.name} />
+          <h1>{role.name} briefing</h1>
+          <div className={`privatePanel ${role.id}`}>
+            <p>{role.briefing}</p>
+          </div>
+          <p className="muted">
+            You will receive information the other role does not see. Share relevant observations
+            before voting.
+          </p>
+          <Notice tone="neutral">Waiting for the facilitator to open Round 1.</Notice>
+        </section>
+      )
+    }
+  }
+
   return (
     <section className="screenStack">
       <RoleBadge role={snapshot.role.role} privacy="Role briefing" />
@@ -740,6 +813,9 @@ function RoundWorkspace({
   setChoiceStep,
   mode,
   participantSnapshot,
+  liveSession,
+  liveRound,
+  setLiveRound,
 }: {
   role: RoleId
   selectedChoiceId: string
@@ -749,7 +825,20 @@ function RoundWorkspace({
   setChoiceStep: (step: ChoiceStep) => void
   mode: 'decision' | 'waiting'
   participantSnapshot: ParticipantSnapshot
+  liveSession: LiveSessionState | null
+  liveRound: LiveRoundSnapshot | null
+  setLiveRound: (round: LiveRoundSnapshot | null) => void
 }) {
+  if (liveSession?.actor === 'participant') {
+    return (
+      <LiveParticipantRound
+        liveSession={liveSession}
+        liveRound={liveRound}
+        setLiveRound={setLiveRound}
+      />
+    )
+  }
+
   const content = participantSnapshot.role
   const step = mode === 'waiting' ? 'waiting' : choiceStep
 
@@ -779,6 +868,179 @@ function RoundWorkspace({
         step={step}
         setChoiceStep={setChoiceStep}
       />
+    </section>
+  )
+}
+
+function LiveParticipantRound({
+  liveSession,
+  liveRound,
+  setLiveRound,
+}: {
+  liveSession: LiveSessionState
+  liveRound: LiveRoundSnapshot | null
+  setLiveRound: (round: LiveRoundSnapshot | null) => void
+}) {
+  const navigate = useNavigate()
+  const [selectedChoiceId, setSelectedChoiceId] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!['round_open', 'round_locked', 'consequence_revealed'].includes(liveSession.lobby.phase)) {
+      return
+    }
+
+    setIsLoading(true)
+    getLiveRound(liveSession)
+      .then((round) => {
+        setLiveRound(round)
+        setError('')
+      })
+      .catch((roundError) => {
+        setError(roundError instanceof Error ? roundError.message : 'Could not load round.')
+      })
+      .finally(() => setIsLoading(false))
+  }, [liveSession, setLiveRound])
+
+  async function handleSubmitVote() {
+    if (!liveRound || !selectedChoiceId) {
+      return
+    }
+
+    setError('')
+    setIsSubmitting(true)
+
+    try {
+      const round = await submitLiveVote(liveSession, liveRound.round_id, selectedChoiceId)
+      setLiveRound(round)
+    } catch (voteError) {
+      setError(voteError instanceof Error ? voteError.message : 'Could not submit vote.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (!['round_open', 'round_locked', 'consequence_revealed'].includes(liveSession.lobby.phase)) {
+    return (
+      <section className="screenStack">
+        <StatusLine state="connected" />
+        <h1>Waiting for Round 1</h1>
+        <Notice tone="neutral">The facilitator has not opened voting yet.</Notice>
+      </section>
+    )
+  }
+
+  if (isLoading && !liveRound) {
+    return (
+      <section className="screenStack">
+        <StatusLine state="connected" />
+        <h1>Loading round</h1>
+        <Notice tone="neutral">Fetching your role-specific briefing.</Notice>
+      </section>
+    )
+  }
+
+  if (!liveRound?.role) {
+    return (
+      <section className="screenStack">
+        <StatusLine state="connected" />
+        <h1>Round unavailable</h1>
+        {error ? <Notice tone="warning">{error}</Notice> : null}
+      </section>
+    )
+  }
+
+  if (liveRound.result) {
+    return (
+      <LiveParticipantRoundResult
+        round={liveRound}
+        onContinue={() => navigate('/participant/result')}
+      />
+    )
+  }
+
+  return (
+    <section className="roundScreen">
+      <div className="roundHeader">
+        <span className="mono">
+          Round {liveRound.round_number} of {liveRound.total_rounds}
+        </span>
+        <StatusLine state="connected" compact />
+      </div>
+      <RoleBadgeByLabel roleId={liveRound.role.id} label={liveRound.role.name} />
+      <IncidentPanel title="Shared incident update">{liveRound.shared_update}</IncidentPanel>
+      <div className={`privatePanel ${liveRound.role.id}`}>
+        <p className="panelLabel">Private to {liveRound.role.name}</p>
+        <p>{liveRound.role.private_information}</p>
+      </div>
+      {error ? (
+        <Notice tone="warning" live>
+          {error}
+        </Notice>
+      ) : null}
+      {liveRound.vote_submitted ? (
+        <Notice tone="success" live>
+          Vote accepted. Your decision is recorded and cannot be changed.
+        </Notice>
+      ) : liveRound.phase === 'round_open' ? (
+        <form className="choicePanel">
+          <fieldset>
+            <legend>Choose one action</legend>
+            {liveRound.role.choices.map((choice) => (
+              <label className={`choiceCard ${liveRound.role?.id}`} key={choice.id}>
+                <input
+                  type="radio"
+                  name="decision"
+                  checked={selectedChoiceId === choice.id}
+                  onChange={() => setSelectedChoiceId(choice.id)}
+                />
+                <span>{choice.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          <button
+            type="button"
+            className="primaryButton"
+            disabled={!selectedChoiceId || isSubmitting}
+            onClick={handleSubmitVote}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit decision'}
+          </button>
+        </form>
+      ) : (
+        <Notice tone="neutral">Voting is locked. Waiting for the facilitator to reveal.</Notice>
+      )}
+    </section>
+  )
+}
+
+function LiveParticipantRoundResult({
+  round,
+  onContinue,
+}: {
+  round: LiveRoundSnapshot
+  onContinue?: () => void
+}) {
+  return (
+    <section className="screenStack">
+      <p className="eyebrow">Round {round.round_number} result</p>
+      <h1>Consequence reveal</h1>
+      <LiveDecisionGrid round={round} />
+      <IncidentPanel title="Public consequence">{round.result?.public_consequence ?? ''}</IncidentPanel>
+      {round.result?.interaction_summaries.map((summary) => (
+        <Notice tone="success" key={summary}>
+          {summary}
+        </Notice>
+      ))}
+      <LiveMetricGrid metrics={round.result?.metric_deltas ?? []} />
+      <p className="learningPoint">Learning point: {round.result?.learning_point}</p>
+      {onContinue ? (
+        <button type="button" className="secondaryButton" onClick={onContinue}>
+          View result
+        </button>
+      ) : null}
     </section>
   )
 }
@@ -868,7 +1130,31 @@ function ChoiceState({
   )
 }
 
-function ParticipantResult({ snapshot }: { snapshot: ParticipantSnapshot }) {
+function ParticipantResult({
+  snapshot,
+  liveSession,
+  liveRound,
+  setLiveRound,
+}: {
+  snapshot: ParticipantSnapshot
+  liveSession: LiveSessionState | null
+  liveRound: LiveRoundSnapshot | null
+  setLiveRound: (round: LiveRoundSnapshot | null) => void
+}) {
+  useEffect(() => {
+    if (liveSession?.actor !== 'participant') {
+      return
+    }
+
+    getLiveRound(liveSession)
+      .then(setLiveRound)
+      .catch(() => undefined)
+  }, [liveSession, setLiveRound])
+
+  if (liveSession?.actor === 'participant' && liveRound?.result) {
+    return <LiveParticipantRoundResult round={liveRound} />
+  }
+
   return (
     <section className="screenStack">
       <p className="eyebrow">Round 1 result</p>
@@ -1013,6 +1299,7 @@ function FacilitatorLobby({
   liveSession: LiveSessionState | null
   setLiveSession: (session: LiveSessionState | null) => void
 }) {
+  const navigate = useNavigate()
   const [closeError, setCloseError] = useState('')
   const [startError, setStartError] = useState('')
   const [isStarting, setIsStarting] = useState(false)
@@ -1043,6 +1330,7 @@ function FacilitatorLobby({
     try {
       const lobby = await startLiveSession(liveSession)
       setLiveSession({ ...liveSession, lobby })
+      navigate('/facilitator/round')
     } catch (error) {
       setStartError(error instanceof Error ? error.message : 'Could not start exercise.')
     } finally {
@@ -1159,11 +1447,147 @@ function LiveRoundControl({
   snapshot,
   variant,
   setVariant,
+  liveSession,
+  liveRound,
+  setLiveRound,
 }: {
   snapshot: FacilitatorSnapshot
   variant: VoteVariant
   setVariant: (variant: VoteVariant) => void
+  liveSession: LiveSessionState | null
+  liveRound: LiveRoundSnapshot | null
+  setLiveRound: (round: LiveRoundSnapshot | null) => void
 }) {
+  const [error, setError] = useState('')
+  const [isWorking, setIsWorking] = useState(false)
+
+  useEffect(() => {
+    if (
+      liveSession?.actor !== 'facilitator' ||
+      !['round_open', 'round_locked', 'consequence_revealed'].includes(liveSession.lobby.phase)
+    ) {
+      return
+    }
+
+    getLiveRound(liveSession)
+      .then(setLiveRound)
+      .catch(() => undefined)
+  }, [liveSession, setLiveRound])
+
+  async function runRoundAction(action: (session: LiveSessionState) => Promise<LiveRoundSnapshot>) {
+    if (!liveSession) {
+      return
+    }
+
+    setError('')
+    setIsWorking(true)
+
+    try {
+      const round = await action(liveSession)
+      setLiveRound(round)
+    } catch (roundError) {
+      setError(roundError instanceof Error ? roundError.message : 'Could not update round.')
+    } finally {
+      setIsWorking(false)
+    }
+  }
+
+  if (liveSession?.actor === 'facilitator') {
+    const livePhase = liveRound?.phase ?? liveSession.lobby.phase
+
+    if (livePhase === 'briefing') {
+      return (
+        <section className="facilitatorStack">
+          <div className="roundControlHeader">
+            <div>
+              <p className="eyebrow">Briefing</p>
+              <h1>Ready to open Round 1</h1>
+              <p className="muted">
+                Role selection is locked. Open voting when participants are ready.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="primaryButton desktopAction"
+              disabled={isWorking}
+              onClick={() => runRoundAction(openLiveRound)}
+            >
+              {isWorking ? 'Opening...' : 'Open round'}
+            </button>
+          </div>
+          {error ? <Notice tone="warning">{error}</Notice> : null}
+        </section>
+      )
+    }
+
+    if (liveRound) {
+      return (
+        <section className="facilitatorStack">
+          <div className="roundControlHeader">
+            <div>
+              <p className="eyebrow">{livePhase === 'round_open' ? 'Voting open' : 'Round locked'}</p>
+              <h1>
+                Round {liveRound.round_number} of {liveRound.total_rounds}: {liveRound.title}
+              </h1>
+              <p className="muted">{liveRound.shared_update}</p>
+            </div>
+            {livePhase === 'round_open' ? (
+              <button
+                type="button"
+                className="primaryButton desktopAction"
+                disabled={isWorking}
+                onClick={() => runRoundAction(lockLiveRound)}
+              >
+                {isWorking ? 'Locking...' : 'Lock voting'}
+              </button>
+            ) : null}
+            {livePhase === 'round_locked' ? (
+              <button
+                type="button"
+                className="primaryButton desktopAction"
+                disabled={isWorking}
+                onClick={() => runRoundAction(revealLiveRound)}
+              >
+                {isWorking ? 'Revealing...' : 'Reveal result'}
+              </button>
+            ) : null}
+          </div>
+          {error ? (
+            <Notice tone="warning" live>
+              {error}
+            </Notice>
+          ) : null}
+          <div className="controlGrid">
+            <section className="panel">
+              <h2>Vote completion</h2>
+              <LiveVoteProgressCards progress={liveRound.vote_progress} />
+              {liveRound.result ? (
+                <>
+                  <LiveDecisionGrid round={liveRound} />
+                  <IncidentPanel title="Public consequence">
+                    {liveRound.result.public_consequence}
+                  </IncidentPanel>
+                  <LiveMetricGrid metrics={liveRound.result.metric_deltas} />
+                </>
+              ) : null}
+            </section>
+            <section className="panel">
+              <h2>Private facilitator note</h2>
+              <p>{liveRound.facilitator_note}</p>
+            </section>
+          </div>
+        </section>
+      )
+    }
+
+    return (
+      <section className="facilitatorStack">
+        <h1>Round unavailable</h1>
+        {error ? <Notice tone="warning">{error}</Notice> : null}
+      </section>
+    )
+  }
+
   return (
     <section className="facilitatorStack">
       <div className="roundControlHeader">
@@ -1510,6 +1934,55 @@ function RoleBadge({ role, privacy }: { role: RoleId; privacy: string }) {
       {content.label} - {privacy}
     </span>
   )
+}
+
+function RoleBadgeByLabel({ roleId, label }: { roleId: string; label: string }) {
+  return <span className={`roleBadge ${roleId}`}>{label} - Private briefing</span>
+}
+
+function LiveDecisionGrid({ round }: { round: LiveRoundSnapshot }) {
+  return (
+    <div className="decisionGrid">
+      {round.result?.decisions.map((decision) => (
+        <div className={`decisionSummary ${decision.role_id}`} key={decision.role_id}>
+          <strong>{decision.role_name} chose</strong>
+          <p>{decision.choice_label}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function LiveVoteProgressCards({ progress }: { progress: LiveVoteProgress[] }) {
+  return (
+    <div className="voteCards">
+      {progress.map((role) => (
+        <div className={`voteCard ${role.role_id}`} key={role.role_id}>
+          <span>{role.role_name}</span>
+          <strong>
+            {role.submitted}/{role.expected}
+          </strong>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function LiveMetricGrid({ metrics }: { metrics: LiveMetricDelta[] }) {
+  return (
+    <div className="metricGrid" aria-label="Metric changes">
+      {metrics.map((metric) => (
+        <div key={metric.id}>
+          <span>{metric.name}</span>
+          <strong>{formatSigned(metric.delta)}</strong>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function formatSigned(value: number): string {
+  return value > 0 ? `+${value}` : String(value)
 }
 
 function CountGrid({ snapshot }: { snapshot: ParticipantSnapshot }) {

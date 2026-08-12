@@ -175,10 +175,18 @@ export type LiveRole = {
   briefing: string
 }
 
+export type LiveSessionPhase =
+  | 'lobby'
+  | 'briefing'
+  | 'round_open'
+  | 'round_locked'
+  | 'consequence_revealed'
+  | 'closed'
+
 export type LiveLobbySnapshot = {
   session_id: string
   room_code: string
-  phase: 'lobby' | 'briefing' | 'closed'
+  phase: LiveSessionPhase
   scenario_id: string
   mode: 'quick' | 'standard'
   max_participants: number
@@ -199,6 +207,63 @@ export type LiveSessionState = {
   participantName?: string
   joinUrl?: string
   lobby: LiveLobbySnapshot
+}
+
+export type LiveRoundChoice = {
+  id: string
+  label: string
+}
+
+export type LiveRoundRole = {
+  id: string
+  name: string
+  briefing: string
+  private_information: string
+  choices: LiveRoundChoice[]
+}
+
+export type LiveVoteProgress = {
+  role_id: string
+  role_name: string
+  submitted: number
+  expected: number
+}
+
+export type LiveRoundDecision = {
+  role_id: string
+  role_name: string
+  choice_id: string
+  choice_label: string
+}
+
+export type LiveMetricDelta = {
+  id: string
+  name: string
+  delta: number
+  value: number
+}
+
+export type LiveRoundResult = {
+  public_consequence: string
+  interaction_summaries: string[]
+  decisions: LiveRoundDecision[]
+  metric_deltas: LiveMetricDelta[]
+  learning_point: string
+}
+
+export type LiveRoundSnapshot = {
+  session_id: string
+  phase: LiveSessionPhase
+  round_id: string
+  round_number: number
+  total_rounds: number
+  title: string
+  shared_update: string
+  role: LiveRoundRole | null
+  vote_submitted: boolean
+  vote_progress: LiveVoteProgress[]
+  facilitator_note: string | null
+  result: LiveRoundResult | null
 }
 
 export type ReviewNavGroup = {

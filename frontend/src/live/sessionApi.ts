@@ -1,4 +1,4 @@
-import type { LiveLobbySnapshot, LiveSessionState } from '../domain/model'
+import type { LiveLobbySnapshot, LiveRoundSnapshot, LiveSessionState } from '../domain/model'
 
 const API_BASE_URL = 'http://127.0.0.1:8000'
 
@@ -91,6 +91,78 @@ export async function startLiveSession(session: LiveSessionState): Promise<LiveL
   }
 
   return await request<LiveLobbySnapshot>(`/api/sessions/${session.sessionId}/start`, {
+    method: 'POST',
+    body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
+  })
+}
+
+export async function openLiveRound(session: LiveSessionState): Promise<LiveRoundSnapshot> {
+  if (!session.facilitatorToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveRoundSnapshot>(`/api/sessions/${session.sessionId}/round/open`, {
+    method: 'POST',
+    body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
+  })
+}
+
+export async function getLiveRound(session: LiveSessionState): Promise<LiveRoundSnapshot> {
+  const url = new URL(`${API_BASE_URL}/api/sessions/${session.sessionId}/round`)
+
+  if (session.actor === 'facilitator' && session.facilitatorToken) {
+    url.searchParams.set('facilitator_token', session.facilitatorToken)
+  }
+
+  if (session.actor === 'participant' && session.participantToken) {
+    url.searchParams.set('participant_token', session.participantToken)
+  }
+
+  const response = await fetch(url.toString())
+
+  if (!response.ok) {
+    throw new Error(await errorMessage(response))
+  }
+
+  return (await response.json()) as LiveRoundSnapshot
+}
+
+export async function submitLiveVote(
+  session: LiveSessionState,
+  roundId: string,
+  choiceId: string,
+): Promise<LiveRoundSnapshot> {
+  if (!session.participantToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveRoundSnapshot>(`/api/sessions/${session.sessionId}/vote`, {
+    method: 'POST',
+    body: JSON.stringify({
+      participant_token: session.participantToken,
+      round_id: roundId,
+      choice_id: choiceId,
+    }),
+  })
+}
+
+export async function lockLiveRound(session: LiveSessionState): Promise<LiveRoundSnapshot> {
+  if (!session.facilitatorToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveRoundSnapshot>(`/api/sessions/${session.sessionId}/round/lock`, {
+    method: 'POST',
+    body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
+  })
+}
+
+export async function revealLiveRound(session: LiveSessionState): Promise<LiveRoundSnapshot> {
+  if (!session.facilitatorToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveRoundSnapshot>(`/api/sessions/${session.sessionId}/round/reveal`, {
     method: 'POST',
     body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
   })

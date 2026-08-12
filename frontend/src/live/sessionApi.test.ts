@@ -1,11 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { LiveLobbySnapshot } from '../domain/model'
+import type { LiveLobbySnapshot, LiveRoundSnapshot } from '../domain/model'
 import {
   createLiveSession,
+  getLiveRound,
   joinLiveSession,
+  lockLiveRound,
   lobbyWebSocketUrl,
+  openLiveRound,
+  revealLiveRound,
   selectParticipantRole,
   startLiveSession,
+  submitLiveVote,
 } from './sessionApi'
 
 const lobby: LiveLobbySnapshot = {
@@ -34,6 +39,27 @@ const lobby: LiveLobbySnapshot = {
   },
   participants: [],
   warning: '',
+}
+
+const round: LiveRoundSnapshot = {
+  session_id: 'session-1',
+  phase: 'round_open',
+  round_id: 'r1-suspicious-payroll-request',
+  round_number: 1,
+  total_rounds: 5,
+  title: 'The Suspicious Payroll Request',
+  shared_update: 'An employee reports an urgent payroll message.',
+  role: {
+    id: 'hr',
+    name: 'HR',
+    briefing: 'Protect employee information.',
+    private_information: 'The sender display name looks like HR.',
+    choices: [{ id: 'hr-r1-secure-contact-escalate', label: 'Escalate securely.' }],
+  },
+  vote_submitted: false,
+  vote_progress: [{ role_id: 'hr', role_name: 'HR', submitted: 0, expected: 1 }],
+  facilitator_note: null,
+  result: null,
 }
 
 describe('live session API helpers', () => {
@@ -146,6 +172,102 @@ describe('live session API helpers', () => {
         method: 'POST',
         body: JSON.stringify({ facilitator_token: 'facilitator-secret' }),
       }),
+    )
+  })
+
+  it('opens the first live round', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(round))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await openLiveRound({
+      actor: 'facilitator',
+      sessionId: 'session-1',
+      roomCode: 'AB7K2P',
+      facilitatorToken: 'facilitator-secret',
+      lobby,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/round/open',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ facilitator_token: 'facilitator-secret' }),
+      }),
+    )
+  })
+
+  it('fetches a participant round snapshot', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(round))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getLiveRound({
+      actor: 'participant',
+      sessionId: 'session-1',
+      roomCode: 'AB7K2P',
+      participantToken: 'participant-secret',
+      lobby,
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/round?participant_token=participant-secret',
+    )
+  })
+
+  it('submits a participant vote', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ...round, vote_submitted: true }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await submitLiveVote(
+      {
+        actor: 'participant',
+        sessionId: 'session-1',
+        roomCode: 'AB7K2P',
+        participantToken: 'participant-secret',
+        lobby,
+      },
+      'r1-suspicious-payroll-request',
+      'hr-r1-secure-contact-escalate',
+    )
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:8000/api/sessions/session-1/vote',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          participant_token: 'participant-secret',
+          round_id: 'r1-suspicious-payroll-request',
+          choice_id: 'hr-r1-secure-contact-escalate',
+        }),
+      }),
+    )
+  })
+
+  it('locks and reveals a live round', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ ...round, phase: 'round_locked' }))
+      .mockResolvedValueOnce(jsonResponse({ ...round, phase: 'consequence_revealed' }))
+    vi.stubGlobal('fetch', fetchMock)
+    const session = {
+      actor: 'facilitator' as const,
+      sessionId: 'session-1',
+      roomCode: 'AB7K2P',
+      facilitatorToken: 'facilitator-secret',
+      lobby,
+    }
+
+    await lockLiveRound(session)
+    await revealLiveRound(session)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://127.0.0.1:8000/api/sessions/session-1/round/lock',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'http://127.0.0.1:8000/api/sessions/session-1/round/reveal',
+      expect.objectContaining({ method: 'POST' }),
     )
   })
 })

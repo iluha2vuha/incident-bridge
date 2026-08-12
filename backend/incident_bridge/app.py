@@ -15,14 +15,17 @@ from incident_bridge.sessions import (
     CloseSessionRequest,
     CreateSessionRequest,
     CreateSessionResponse,
+    FacilitatorTokenRequest,
     JoinSessionRequest,
     JoinSessionResponse,
     LobbySnapshot,
+    RoundSnapshot,
     SelectRoleRequest,
     SessionError,
     SessionErrorCode,
     SessionManager,
     StartSessionRequest,
+    SubmitVoteRequest,
     session_error_payload,
 )
 
@@ -188,6 +191,48 @@ def create_app(
     async def start_session(session_id: str, request: StartSessionRequest) -> LobbySnapshot:
         snapshot = manager.start_session(session_id, request.facilitator_token)
         await hub.broadcast(snapshot)
+        return snapshot
+
+    @app.post("/api/sessions/{session_id}/round/open", response_model=RoundSnapshot)
+    async def open_round(session_id: str, request: FacilitatorTokenRequest) -> RoundSnapshot:
+        snapshot = manager.open_round(session_id, request.facilitator_token)
+        lobby = manager.lobby_for_token(session_id, facilitator_token=request.facilitator_token)
+        await hub.broadcast(lobby)
+        return snapshot
+
+    @app.get("/api/sessions/{session_id}/round", response_model=RoundSnapshot)
+    async def get_round(
+        session_id: str,
+        facilitator_token: Optional[str] = None,
+        participant_token: Optional[str] = None,
+    ) -> RoundSnapshot:
+        return manager.round_for_token(
+            session_id,
+            facilitator_token=facilitator_token,
+            participant_token=participant_token,
+        )
+
+    @app.post("/api/sessions/{session_id}/vote", response_model=RoundSnapshot)
+    async def submit_vote(session_id: str, request: SubmitVoteRequest) -> RoundSnapshot:
+        return manager.submit_vote(
+            session_id,
+            participant_token=request.participant_token,
+            round_id=request.round_id,
+            choice_id=request.choice_id,
+        )
+
+    @app.post("/api/sessions/{session_id}/round/lock", response_model=RoundSnapshot)
+    async def lock_round(session_id: str, request: FacilitatorTokenRequest) -> RoundSnapshot:
+        snapshot = manager.lock_round(session_id, request.facilitator_token)
+        lobby = manager.lobby_for_token(session_id, facilitator_token=request.facilitator_token)
+        await hub.broadcast(lobby)
+        return snapshot
+
+    @app.post("/api/sessions/{session_id}/round/reveal", response_model=RoundSnapshot)
+    async def reveal_round(session_id: str, request: FacilitatorTokenRequest) -> RoundSnapshot:
+        snapshot = manager.reveal_round(session_id, request.facilitator_token)
+        lobby = manager.lobby_for_token(session_id, facilitator_token=request.facilitator_token)
+        await hub.broadcast(lobby)
         return snapshot
 
     @app.websocket("/ws/sessions/{session_id}/lobby")
