@@ -213,9 +213,13 @@ function TopBar() {
 
   return (
     <header className={`topbar ${isParticipant ? 'participantOnly' : ''}`}>
-      <Link className="brand" to="/review" aria-label="Incident Bridge review index">
-        Incident Bridge
-      </Link>
+      {isReview ? (
+        <Link className="brand" to="/review" aria-label="Incident Bridge review index">
+          Incident Bridge
+        </Link>
+      ) : (
+        <span className="brand">Incident Bridge</span>
+      )}
       {isParticipant ? <span className="prototypeLabel">Participant view</span> : null}
       {isFacilitator ? <span className="prototypeLabel">Facilitator view</span> : null}
       {isReview ? <span className="prototypeLabel">Prototype, fake data only</span> : null}

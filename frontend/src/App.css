@@ -567,7 +567,7 @@ input {
   border: 2px solid var(--ink);
   box-sizing: border-box;
   min-height: 640px;
-  min-width: min(1280px, 100%);
+  min-width: min(1180px, 100%);
   width: min(1440px, 100%);
 }
 
@@ -581,7 +581,8 @@ input {
 .controlGrid,
 .facilitatorLobby {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+  grid-template-columns: 320px minmax(0, 1fr);
 }
 
 .desktopAction {
@@ -590,12 +591,12 @@ input {
 
 .roomPanel {
   align-items: center;
-  border-right: 2px solid var(--ink);
+  border: 2px solid var(--ink);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   justify-content: center;
-  padding-inline-end: var(--space-6);
+  padding: var(--space-6);
   text-align: center;
 }
 
@@ -604,6 +605,7 @@ input {
 }
 
 .participantsPanel {
+  align-content: start;
   display: grid;
   gap: var(--space-4);
 }
@@ -719,12 +721,6 @@ input {
 
   .metricGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 1100px) {
-  .desktopFrame {
-    min-width: 980px;
   }
 }
 
