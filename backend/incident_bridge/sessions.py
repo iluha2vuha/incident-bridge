@@ -56,6 +56,7 @@ class SessionErrorCode(str, Enum):
     ROLE_SELECTION_LOCKED = "role_selection_locked"
     ROUND_NOT_OPEN = "round_not_open"
     ROUND_NOT_LOCKED = "round_not_locked"
+    NO_NEXT_ROUND = "no_next_round"
     SESSION_NOT_FOUND = "session_not_found"
     START_BLOCKED = "start_blocked"
     TIE_REQUIRES_RESOLUTION = "tie_requires_resolution"
@@ -210,6 +211,7 @@ class RoundSnapshot(BaseModel):
     round_id: str
     round_number: int
     total_rounds: int
+    has_next_round: bool
     title: str
     shared_update: str
     role: Optional[ParticipantRoundRoleView] = None
@@ -624,6 +626,42 @@ class SessionManager:
         self._transition_session(session, "consequence_revealed")
         return self._round_snapshot(session, self._current_round(session), None)
 
+    def advance_round(self, session_id: str, facilitator_token: str) -> RoundSnapshot:
+        session = self._session(session_id)
+        self._ensure_facilitator(session, facilitator_token)
+        self._ensure_not_expired(session)
+
+        if session.closed:
+            raise SessionError(SessionErrorCode.CLOSED_ROOM, "Room is closed.", 410)
+
+        if session.phase != "consequence_revealed":
+            raise SessionError(
+                SessionErrorCode.ROUND_NOT_LOCKED,
+                "Round result must be revealed before advancing.",
+                409,
+            )
+
+        round_ids = self._round_ids(session)
+        current_round_id = session.current_round_id
+
+        if current_round_id is None:
+            raise SessionError(SessionErrorCode.ROUND_NOT_OPEN, "Round is not open.", 404)
+
+        current_index = round_ids.index(current_round_id)
+
+        if current_index >= len(round_ids) - 1:
+            raise SessionError(
+                SessionErrorCode.NO_NEXT_ROUND,
+                "No next round is available.",
+                409,
+            )
+
+        session.current_round_id = round_ids[current_index + 1]
+        session.votes.clear()
+        session.round_result = None
+        self._transition_session(session, "briefing")
+        return self._round_snapshot(session, self._current_round(session), None)
+
     def lobby_for_token(
         self,
         session_id: str,
@@ -687,6 +725,7 @@ class SessionManager:
             round_id=round_.id,
             round_number=round_ids.index(round_.id) + 1,
             total_rounds=len(round_ids),
+            has_next_round=round_ids.index(round_.id) < len(round_ids) - 1,
             title=round_.title,
             shared_update=round_.shared_update,
             role=role,

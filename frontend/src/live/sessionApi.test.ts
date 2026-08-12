@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { LiveLobbySnapshot, LiveRoundSnapshot } from '../domain/model'
 import {
+  advanceLiveRound,
   createLiveSession,
   getLiveRound,
   joinLiveSession,
@@ -47,6 +48,7 @@ const round: LiveRoundSnapshot = {
   round_id: 'r1-suspicious-payroll-request',
   round_number: 1,
   total_rounds: 5,
+  has_next_round: true,
   title: 'The Suspicious Payroll Request',
   shared_update: 'An employee reports an urgent payroll message.',
   role: {
@@ -242,11 +244,19 @@ describe('live session API helpers', () => {
     )
   })
 
-  it('locks and reveals a live round', async () => {
+  it('locks, reveals, and advances a live round', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse({ ...round, phase: 'round_locked' }))
       .mockResolvedValueOnce(jsonResponse({ ...round, phase: 'consequence_revealed' }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          ...round,
+          phase: 'briefing',
+          round_id: 'r2-repeated-authentication-prompts',
+          round_number: 2,
+        }),
+      )
     vi.stubGlobal('fetch', fetchMock)
     const session = {
       actor: 'facilitator' as const,
@@ -258,6 +268,7 @@ describe('live session API helpers', () => {
 
     await lockLiveRound(session)
     await revealLiveRound(session)
+    await advanceLiveRound(session)
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -267,6 +278,11 @@ describe('live session API helpers', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       'http://127.0.0.1:8000/api/sessions/session-1/round/reveal',
+      expect.objectContaining({ method: 'POST' }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      'http://127.0.0.1:8000/api/sessions/session-1/round/advance',
       expect.objectContaining({ method: 'POST' }),
     )
   })

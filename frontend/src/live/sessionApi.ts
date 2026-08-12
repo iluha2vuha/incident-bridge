@@ -168,6 +168,17 @@ export async function revealLiveRound(session: LiveSessionState): Promise<LiveRo
   })
 }
 
+export async function advanceLiveRound(session: LiveSessionState): Promise<LiveRoundSnapshot> {
+  if (!session.facilitatorToken) {
+    throw new Error('Permission denied.')
+  }
+
+  return await request<LiveRoundSnapshot>(`/api/sessions/${session.sessionId}/round/advance`, {
+    method: 'POST',
+    body: JSON.stringify({ facilitator_token: session.facilitatorToken }),
+  })
+}
+
 export function lobbyWebSocketUrl(
   sessionId: string,
   actor: LiveSessionState['actor'],

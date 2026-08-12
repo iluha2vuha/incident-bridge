@@ -290,6 +290,64 @@ class SessionManagerTest(unittest.TestCase):
         )
         self.assertIsNotNone(participant_revealed.result)
 
+    def test_standard_mode_advances_through_all_five_rounds(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [("Jordan", "hr"), ("Morgan", "it-helpdesk")],
+            mode="standard",
+        )
+        expected_round_ids = [
+            "r1-suspicious-payroll-request",
+            "r2-repeated-authentication-prompts",
+            "r3-suspicious-mailbox-activity",
+            "r4-wider-organisational-impact",
+            "r5-recovery-and-communication",
+        ]
+
+        for index, expected_round_id in enumerate(expected_round_ids):
+            opened = manager.open_round(session.session_id, session.facilitator_token)
+            self.assertEqual(opened.round_id, expected_round_id)
+            self.assertEqual(opened.round_number, index + 1)
+            self.assertEqual(opened.total_rounds, 5)
+            self.assertEqual(opened.has_next_round, index < 4)
+            submit_first_available_choices(manager, session, participants)
+            manager.lock_round(session.session_id, session.facilitator_token)
+            manager.reveal_round(session.session_id, session.facilitator_token)
+
+            if index < 4:
+                advanced = manager.advance_round(session.session_id, session.facilitator_token)
+                self.assertEqual(advanced.phase, "briefing")
+                self.assertEqual(advanced.round_id, expected_round_ids[index + 1])
+            else:
+                with self.assertRaisesRegex(SessionError, "No next"):
+                    manager.advance_round(session.session_id, session.facilitator_token)
+
+    def test_quick_mode_uses_selected_round_ids_from_same_scenario(self) -> None:
+        manager = SessionManager()
+        session, participants = create_started_session_with_roles(
+            manager,
+            [("Jordan", "hr"), ("Morgan", "it-helpdesk")],
+            mode="quick",
+        )
+        expected_round_ids = [
+            "r1-suspicious-payroll-request",
+            "r3-suspicious-mailbox-activity",
+            "r5-recovery-and-communication",
+        ]
+
+        for index, expected_round_id in enumerate(expected_round_ids):
+            opened = manager.open_round(session.session_id, session.facilitator_token)
+            self.assertEqual(opened.round_id, expected_round_id)
+            self.assertEqual(opened.round_number, index + 1)
+            self.assertEqual(opened.total_rounds, 3)
+            submit_first_available_choices(manager, session, participants)
+            manager.lock_round(session.session_id, session.facilitator_token)
+            manager.reveal_round(session.session_id, session.facilitator_token)
+
+            if index < 2:
+                manager.advance_round(session.session_id, session.facilitator_token)
+
     def test_rejects_invalid_room_code(self) -> None:
         manager = SessionManager()
 
@@ -357,8 +415,9 @@ def create_started_session(
 def create_started_session_with_roles(
     manager: SessionManager,
     participant_specs: list[tuple[str, str]],
+    mode: str = "standard",
 ) -> tuple[object, list[object]]:
-    session = manager.create_session(scenario_id="friday-pay-run", mode="standard")
+    session = manager.create_session(scenario_id="friday-pay-run", mode=mode)
     participants = []
 
     for nickname, role_id in participant_specs:
@@ -374,6 +433,25 @@ def create_started_session_with_roles(
 
     manager.start_session(session.session_id, session.facilitator_token)
     return session, participants
+
+
+def submit_first_available_choices(
+    manager: SessionManager,
+    session: object,
+    participants: list[object],
+) -> None:
+    for participant in participants:
+        participant_round = manager.round_for_token(
+            session.session_id,
+            participant_token=participant.participant_token,
+        )
+        choice_id = participant_round.role.choices[0].id
+        manager.submit_vote(
+            session.session_id,
+            participant_token=participant.participant_token,
+            round_id=participant_round.round_id,
+            choice_id=choice_id,
+        )
 
 
 if __name__ == "__main__":

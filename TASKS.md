@@ -74,8 +74,8 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 
 ## Phase 10 - Full Scenario
 
-- [ ] Add all five standard rounds through validated content.
-- [ ] Add quick mode as selected round IDs from the same scenario.
+- [x] Add all five standard rounds through validated content.
+- [x] Add quick mode as selected round IDs from the same scenario.
 
 ## Phase 11 - Debrief
 

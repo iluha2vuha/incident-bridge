@@ -32,6 +32,7 @@ import type {
   VoteVariant,
 } from './domain/model'
 import {
+  advanceLiveRound,
   closeLiveSession,
   createLiveSession,
   getLiveRound,
@@ -1549,6 +1550,16 @@ function LiveRoundControl({
                 onClick={() => runRoundAction(revealLiveRound)}
               >
                 {isWorking ? 'Revealing...' : 'Reveal result'}
+              </button>
+            ) : null}
+            {livePhase === 'consequence_revealed' && liveRound.has_next_round ? (
+              <button
+                type="button"
+                className="primaryButton desktopAction"
+                disabled={isWorking}
+                onClick={() => runRoundAction(advanceLiveRound)}
+              >
+                {isWorking ? 'Advancing...' : 'Next round'}
               </button>
             ) : null}
           </div>

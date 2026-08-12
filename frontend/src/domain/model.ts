@@ -257,6 +257,7 @@ export type LiveRoundSnapshot = {
   round_id: string
   round_number: number
   total_rounds: number
+  has_next_round: boolean
   title: string
   shared_update: string
   role: LiveRoundRole | null

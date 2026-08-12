@@ -172,6 +172,18 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reveal_response.status_code, 200)
         self.assertEqual(reveal_response.json()["phase"], "consequence_revealed")
+        self.assertTrue(reveal_response.json()["has_next_round"])
+
+        advance_response = self.client.post(
+            f"/api/sessions/{created['session_id']}/round/advance",
+            json={"facilitator_token": created["facilitator_token"]},
+        )
+
+        self.assertEqual(advance_response.status_code, 200)
+        advanced = advance_response.json()
+        self.assertEqual(advanced["phase"], "briefing")
+        self.assertEqual(advanced["round_id"], "r2-repeated-authentication-prompts")
+        self.assertEqual(advanced["round_number"], 2)
 
     def test_join_reports_controlled_errors(self) -> None:
         invalid_room = self.client.post(

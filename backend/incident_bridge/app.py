@@ -235,6 +235,13 @@ def create_app(
         await hub.broadcast(lobby)
         return snapshot
 
+    @app.post("/api/sessions/{session_id}/round/advance", response_model=RoundSnapshot)
+    async def advance_round(session_id: str, request: FacilitatorTokenRequest) -> RoundSnapshot:
+        snapshot = manager.advance_round(session_id, request.facilitator_token)
+        lobby = manager.lobby_for_token(session_id, facilitator_token=request.facilitator_token)
+        await hub.broadcast(lobby)
+        return snapshot
+
     @app.websocket("/ws/sessions/{session_id}/lobby")
     async def lobby_websocket(
         websocket: WebSocket,
