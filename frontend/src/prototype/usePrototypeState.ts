@@ -7,6 +7,7 @@ import type {
   VoteVariant,
 } from '../domain/model'
 import { roles } from '../mocks/scenario'
+import { buildFacilitatorSnapshot, buildParticipantSnapshot } from '../mocks/snapshots'
 
 export function usePrototypeState() {
   const [role, setRole] = useState<RoleId>('hr')
@@ -20,6 +21,8 @@ export function usePrototypeState() {
   const selectedChoice = roleContent.choices.find(
     (choice) => choice.id === selectedChoiceId,
   )
+  const participantSnapshot = buildParticipantSnapshot(role, connection)
+  const facilitatorSnapshot = buildFacilitatorSnapshot(lobbyVariant, voteVariant)
 
   return {
     role,
@@ -35,6 +38,8 @@ export function usePrototypeState() {
     setLobbyVariant,
     voteVariant,
     setVoteVariant,
+    participantSnapshot,
+    facilitatorSnapshot,
   }
 }
 

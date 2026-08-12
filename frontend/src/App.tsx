@@ -12,16 +12,21 @@ import type {
   Choice,
   ChoiceStep,
   ConnectionState,
+  EmailArtifactContent,
   FacilitatorLobbyVariant,
+  FacilitatorSnapshot,
+  MetricDelta,
+  ParticipantRecord,
+  ParticipantSnapshot,
+  RoleArtifact,
   RoleId,
+  TicketArtifactContent,
   VoteVariant,
 } from './domain/model'
-import { metricDeltas, reviewNavGroups, roles, scenario } from './mocks/scenario'
-import { fakeParticipants, lobbySnapshots, mockSession, voteSnapshots } from './mocks/session'
+import { reviewNavGroups, roles } from './mocks/scenario'
+import { mockSession } from './mocks/session'
 import { usePrototypeState } from './prototype/usePrototypeState'
 import './App.css'
-
-const round = scenario.round
 
 function App() {
   return (
@@ -43,18 +48,18 @@ function PrototypeApp() {
           <Route path="/review" element={<ReviewIndex {...state} />} />
           <Route path="/participant/join" element={<ParticipantShell><JoinScreen /></ParticipantShell>} />
           <Route path="/participant/role" element={<ParticipantShell><RoleSelection role={state.role} setRole={state.setRole} /></ParticipantShell>} />
-          <Route path="/participant/lobby" element={<ParticipantShell><ParticipantLobby role={state.role} connection={state.connection} /></ParticipantShell>} />
-          <Route path="/participant/briefing" element={<ParticipantShell><RoleBriefing role={state.role} /></ParticipantShell>} />
+          <Route path="/participant/lobby" element={<ParticipantShell><ParticipantLobby snapshot={state.participantSnapshot} /></ParticipantShell>} />
+          <Route path="/participant/briefing" element={<ParticipantShell><RoleBriefing snapshot={state.participantSnapshot} /></ParticipantShell>} />
           <Route path="/participant/round" element={<ParticipantShell><RoundWorkspace {...state} mode="decision" /></ParticipantShell>} />
           <Route path="/participant/waiting" element={<ParticipantShell><RoundWorkspace {...state} mode="waiting" /></ParticipantShell>} />
-          <Route path="/participant/result" element={<ParticipantShell><ParticipantResult role={state.role} /></ParticipantShell>} />
+          <Route path="/participant/result" element={<ParticipantShell><ParticipantResult snapshot={state.participantSnapshot} /></ParticipantShell>} />
           <Route path="/participant/disconnected" element={<ParticipantShell><ConnectionExample state="disconnected" selectedChoice={state.selectedChoice} /></ParticipantShell>} />
           <Route path="/participant/reconnecting" element={<ParticipantShell><ConnectionExample state="reconnecting" selectedChoice={state.selectedChoice} /></ParticipantShell>} />
-          <Route path="/facilitator/create" element={<FacilitatorShell><CreateSession /></FacilitatorShell>} />
-          <Route path="/facilitator/lobby" element={<FacilitatorShell><FacilitatorLobby variant={state.lobbyVariant} setVariant={state.setLobbyVariant} /></FacilitatorShell>} />
-          <Route path="/facilitator/round" element={<FacilitatorShell><LiveRoundControl variant={state.voteVariant} setVariant={state.setVoteVariant} /></FacilitatorShell>} />
+          <Route path="/facilitator/create" element={<FacilitatorShell><CreateSession snapshot={state.facilitatorSnapshot} /></FacilitatorShell>} />
+          <Route path="/facilitator/lobby" element={<FacilitatorShell><FacilitatorLobby snapshot={state.facilitatorSnapshot} variant={state.lobbyVariant} setVariant={state.setLobbyVariant} /></FacilitatorShell>} />
+          <Route path="/facilitator/round" element={<FacilitatorShell><LiveRoundControl snapshot={state.facilitatorSnapshot} variant={state.voteVariant} setVariant={state.setVoteVariant} /></FacilitatorShell>} />
           <Route path="/facilitator/lock" element={<FacilitatorShell><LockRoundConfirmation /></FacilitatorShell>} />
-          <Route path="/facilitator/result" element={<FacilitatorShell><FacilitatorResult /></FacilitatorShell>} />
+          <Route path="/facilitator/result" element={<FacilitatorShell><FacilitatorResult snapshot={state.facilitatorSnapshot} /></FacilitatorShell>} />
         </Routes>
       </main>
     </div>
@@ -348,22 +353,16 @@ function RoleCard({
   )
 }
 
-function ParticipantLobby({
-  role,
-  connection,
-}: {
-  role: RoleId
-  connection: ConnectionState
-}) {
+function ParticipantLobby({ snapshot }: { snapshot: ParticipantSnapshot }) {
   return (
     <section className="screenStack">
-      <StatusLine state={connection} />
+      <StatusLine state={snapshot.connection} />
       <div>
         <p className="eyebrow">Room</p>
-        <h1 className="roomCode">{mockSession.roomCode}</h1>
-        <p className="muted">{mockSession.participantName}, you are {roles[role].label}</p>
+        <h1 className="roomCode">{snapshot.roomCode}</h1>
+        <p className="muted">{snapshot.participantName}, you are {snapshot.role.label}</p>
       </div>
-      <CountGrid />
+      <CountGrid snapshot={snapshot} />
       <Notice tone="neutral">Waiting for the facilitator to start the exercise.</Notice>
       <Link className="secondaryLink" to="/participant/role">
         Change role before start
@@ -372,15 +371,13 @@ function ParticipantLobby({
   )
 }
 
-function RoleBriefing({ role }: { role: RoleId }) {
-  const content = roles[role]
-
+function RoleBriefing({ snapshot }: { snapshot: ParticipantSnapshot }) {
   return (
     <section className="screenStack">
-      <RoleBadge role={role} privacy="Role briefing" />
-      <h1>{content.label} briefing</h1>
-      <div className={`privatePanel ${role}`}>
-        <p>{content.briefing}</p>
+      <RoleBadge role={snapshot.role.role} privacy="Role briefing" />
+      <h1>{snapshot.role.label} briefing</h1>
+      <div className={`privatePanel ${snapshot.role.role}`}>
+        <p>{snapshot.role.briefing}</p>
       </div>
       <p className="muted">
         You will receive information the other role does not see. Share relevant
@@ -399,6 +396,7 @@ function RoundWorkspace({
   choiceStep,
   setChoiceStep,
   mode,
+  participantSnapshot,
 }: {
   role: RoleId
   selectedChoiceId: string
@@ -407,23 +405,24 @@ function RoundWorkspace({
   choiceStep: ChoiceStep
   setChoiceStep: (step: ChoiceStep) => void
   mode: 'decision' | 'waiting'
+  participantSnapshot: ParticipantSnapshot
 }) {
-  const content = roles[role]
+  const content = participantSnapshot.role
   const step = mode === 'waiting' ? 'waiting' : choiceStep
 
   return (
     <section className="roundScreen">
       <div className="roundHeader">
-        <span className="mono">Round {round.number} of {round.total}</span>
+        <span className="mono">Round {participantSnapshot.round.number} of {participantSnapshot.round.total}</span>
         <StatusLine state="connected" compact />
       </div>
       <RoleBadge role={role} privacy={`Private to ${content.label}`} />
-      <IncidentPanel title="Shared incident update">{round.shared}</IncidentPanel>
+      <IncidentPanel title="Shared incident update">{participantSnapshot.round.shared}</IncidentPanel>
       <div className={`privatePanel ${role}`}>
         <p className="panelLabel">Private to {content.label}</p>
         <p>{content.privateInfo}</p>
       </div>
-      {role === 'hr' ? <EmailArtifact /> : <TicketArtifact />}
+      <RoleArtifactView artifact={participantSnapshot.artifact} />
       <ChoiceState
         role={role}
         choices={content.choices}
@@ -518,19 +517,19 @@ function ChoiceState({
   )
 }
 
-function ParticipantResult({ role }: { role: RoleId }) {
+function ParticipantResult({ snapshot }: { snapshot: ParticipantSnapshot }) {
   return (
     <section className="screenStack">
       <p className="eyebrow">Round 1 result</p>
       <h1>Consequence reveal</h1>
       <div className="decisionGrid">
-        <DecisionSummary role="hr" text={roles.hr.choices[1].label} />
-        <DecisionSummary role="it-helpdesk" text={roles['it-helpdesk'].choices[1].label} />
+        <DecisionSummary role="hr" text={snapshot.departmentDecisions.hr} />
+        <DecisionSummary role="it-helpdesk" text={snapshot.departmentDecisions['it-helpdesk']} />
       </div>
-      <IncidentPanel title="Public consequence">{round.consequence}</IncidentPanel>
-      <MetricGrid />
-      <p className="learningPoint">Learning point: {round.learning}</p>
-      <Notice tone="neutral">Waiting for the facilitator to continue, {roles[role].shortLabel}.</Notice>
+      <IncidentPanel title="Public consequence">{snapshot.round.consequence}</IncidentPanel>
+      <MetricGrid metrics={snapshot.metricDeltas} />
+      <p className="learningPoint">Learning point: {snapshot.round.learning}</p>
+      <Notice tone="neutral">Waiting for the facilitator to continue, {snapshot.role.shortLabel}.</Notice>
     </section>
   )
 }
@@ -557,7 +556,7 @@ function ConnectionExample({
   )
 }
 
-function CreateSession() {
+function CreateSession({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   return (
     <section className="facilitatorStack">
       <div>
@@ -579,7 +578,7 @@ function CreateSession() {
         </section>
         <section className="panel">
           <h2>Scenario</h2>
-          <p>{scenario.title}</p>
+          <p>{snapshot.scenarioTitle}</p>
         </section>
       </div>
       <Link className="primaryButton desktopAction" to="/facilitator/lobby">
@@ -590,22 +589,22 @@ function CreateSession() {
 }
 
 function FacilitatorLobby({
+  snapshot,
   variant,
   setVariant,
 }: {
+  snapshot: FacilitatorSnapshot
   variant: FacilitatorLobbyVariant
   setVariant: (variant: FacilitatorLobbyVariant) => void
 }) {
-  const lobby = lobbySnapshots[variant]
-
   return (
     <section className="facilitatorStack">
       <div className="facilitatorLobby">
         <section className="roomPanel" aria-labelledby="room-code">
           <p className="eyebrow">Room code</p>
-          <h1 id="room-code" className="roomCode">{mockSession.roomCode}</h1>
+          <h1 id="room-code" className="roomCode">{snapshot.roomCode}</h1>
           <div className="qrPlaceholder" aria-label="QR code placeholder" />
-          <p className="muted">{mockSession.joinUrl}</p>
+          <p className="muted">{snapshot.joinUrl}</p>
         </section>
         <section className="participantsPanel">
           <div className="variantRow">
@@ -619,9 +618,9 @@ function FacilitatorLobby({
               onChange={(value) => setVariant(value as FacilitatorLobbyVariant)}
             />
           </div>
-          <RoleCountCards total={lobby.total} hr={lobby.hr} it={lobby.it} />
-          {lobby.warning ? <Notice tone="warning" live>{lobby.warning}</Notice> : null}
-          <ParticipantList />
+          <RoleCountCards snapshot={snapshot} />
+          {snapshot.lobby.warning ? <Notice tone="warning" live>{snapshot.lobby.warning}</Notice> : null}
+          <ParticipantList participants={snapshot.participants} />
           <div className="buttonRow">
             <button type="button" className="secondaryButton">End session</button>
             <Link className="primaryButton" to="/facilitator/round">Start exercise</Link>
@@ -633,21 +632,21 @@ function FacilitatorLobby({
 }
 
 function LiveRoundControl({
+  snapshot,
   variant,
   setVariant,
 }: {
+  snapshot: FacilitatorSnapshot
   variant: VoteVariant
   setVariant: (variant: VoteVariant) => void
 }) {
-  const votes = voteSnapshots[variant]
-
   return (
     <section className="facilitatorStack">
       <div className="roundControlHeader">
         <div>
           <p className="eyebrow">Voting open</p>
-          <h1>Round 1 of 5: {round.title}</h1>
-          <p className="muted">{round.shared}</p>
+          <h1>Round {snapshot.round.number} of {snapshot.round.total}: {snapshot.round.title}</h1>
+          <p className="muted">{snapshot.round.shared}</p>
         </div>
         <Link className="primaryButton desktopAction" to="/facilitator/lock">Lock voting</Link>
       </div>
@@ -665,10 +664,10 @@ function LiveRoundControl({
         <section className="panel">
           <h2>Vote completion</h2>
           <div className="voteCards">
-            <VoteCard role="hr" value={votes.hr} />
-            <VoteCard role="it-helpdesk" value={votes.it} />
+            <VoteCard role="hr" value={snapshot.vote.hr} />
+            <VoteCard role="it-helpdesk" value={snapshot.vote.it} />
           </div>
-          {votes.warning ? <Notice tone="warning" live>{votes.warning}</Notice> : null}
+          {snapshot.vote.warning ? <Notice tone="warning" live>{snapshot.vote.warning}</Notice> : null}
           <div className="eventTimeline">
             <p>09:41 - Round opened</p>
             <p>09:42 - HR vote received</p>
@@ -677,10 +676,7 @@ function LiveRoundControl({
         </section>
         <section className="panel">
           <h2>Private facilitator note</h2>
-          <p>
-            Ask HR what the sender name looked like before asking IT what they
-            saw on the account. That is the coordination moment.
-          </p>
+          <p>{snapshot.privateRoundNote}</p>
         </section>
       </div>
     </section>
@@ -701,7 +697,7 @@ function LockRoundConfirmation() {
   )
 }
 
-function FacilitatorResult() {
+function FacilitatorResult({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   return (
     <section className="facilitatorStack">
       <div className="roundControlHeader">
@@ -714,23 +710,29 @@ function FacilitatorResult() {
       <div className="controlGrid">
         <section className="panel">
           <h2>Department decisions</h2>
-          <DecisionSummary role="hr" text={roles.hr.choices[1].label} />
-          <DecisionSummary role="it-helpdesk" text={roles['it-helpdesk'].choices[1].label} />
+          <DecisionSummary role="hr" text={snapshot.departmentDecisions.hr} />
+          <DecisionSummary role="it-helpdesk" text={snapshot.departmentDecisions['it-helpdesk']} />
         </section>
         <section className="panel">
           <h2>Public consequence</h2>
-          <p>{round.consequence}</p>
-          <MetricGrid />
-          <p className="learningPoint">Learning point: {round.learning}</p>
+          <p>{snapshot.round.consequence}</p>
+          <MetricGrid metrics={snapshot.metricDeltas} />
+          <p className="learningPoint">Learning point: {snapshot.round.learning}</p>
         </section>
       </div>
     </section>
   )
 }
 
-function EmailArtifact() {
-  const email = scenario.artifacts.hrEmail
+function RoleArtifactView({ artifact }: { artifact: RoleArtifact }) {
+  if (artifact.kind === 'email') {
+    return <EmailArtifact email={artifact.content} />
+  }
 
+  return <TicketArtifact ticket={artifact.content} />
+}
+
+function EmailArtifact({ email }: { email: EmailArtifactContent }) {
   return (
     <article className="artifact emailArtifact" aria-labelledby="email-subject">
       <p className="artifactLabel">Simulated training artifact - email</p>
@@ -752,9 +754,7 @@ function EmailArtifact() {
   )
 }
 
-function TicketArtifact() {
-  const ticket = scenario.artifacts.itTicket
-
+function TicketArtifact({ ticket }: { ticket: TicketArtifactContent }) {
   return (
     <article className="artifact ticketArtifact" aria-labelledby="ticket-title">
       <p className="artifactLabel">Simulated training artifact - BridgeDesk ticket</p>
@@ -823,32 +823,30 @@ function RoleBadge({ role, privacy }: { role: RoleId; privacy: string }) {
   )
 }
 
-function CountGrid() {
-  const lobby = lobbySnapshots.ready
-
+function CountGrid({ snapshot }: { snapshot: ParticipantSnapshot }) {
   return (
     <div className="countGrid" aria-label="Participant counts">
-      <div><strong>{lobby.total}/{mockSession.maxParticipants}</strong><span>participants</span></div>
-      <div className="hr"><strong>{lobby.hr}</strong><span>HR</span></div>
-      <div className="it-helpdesk"><strong>{lobby.it}</strong><span>IT Helpdesk</span></div>
+      <div><strong>{snapshot.lobby.total}/{snapshot.maxParticipants}</strong><span>participants</span></div>
+      <div className="hr"><strong>{snapshot.lobby.hr}</strong><span>HR</span></div>
+      <div className="it-helpdesk"><strong>{snapshot.lobby.it}</strong><span>IT Helpdesk</span></div>
     </div>
   )
 }
 
-function RoleCountCards({ total, hr, it }: { total: number; hr: number; it: number }) {
+function RoleCountCards({ snapshot }: { snapshot: FacilitatorSnapshot }) {
   return (
     <div className="roleCountCards" aria-label="Role counts">
-      <div><strong>{total}/{mockSession.maxParticipants}</strong><span>Participants</span></div>
-      <div className="hr"><strong>{hr}</strong><span>HR</span></div>
-      <div className="it-helpdesk"><strong>{it}</strong><span>IT Helpdesk</span></div>
+      <div><strong>{snapshot.lobby.total}/{snapshot.maxParticipants}</strong><span>Participants</span></div>
+      <div className="hr"><strong>{snapshot.lobby.hr}</strong><span>HR</span></div>
+      <div className="it-helpdesk"><strong>{snapshot.lobby.it}</strong><span>IT Helpdesk</span></div>
     </div>
   )
 }
 
-function ParticipantList() {
+function ParticipantList({ participants }: { participants: ParticipantRecord[] }) {
   return (
     <ul className="participantList" aria-label="Connected participants">
-      {fakeParticipants.map((participant) => (
+      {participants.map((participant) => (
         <li key={participant.name}>
           <span>{participant.name}</span>
           <span>{participant.role}</span>
@@ -886,10 +884,10 @@ function DecisionSummary({ role, text }: { role: RoleId; text: string }) {
   )
 }
 
-function MetricGrid() {
+function MetricGrid({ metrics }: { metrics: MetricDelta[] }) {
   return (
     <div className="metricGrid" aria-label="Metric deltas">
-      {metricDeltas.map((metric) => (
+      {metrics.map((metric) => (
         <div key={metric.label}>
           <span>{metric.label}</span>
           <strong>{metric.value}</strong>

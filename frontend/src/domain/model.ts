@@ -58,6 +58,10 @@ export type ScenarioArtifacts = {
   itTicket: TicketArtifactContent
 }
 
+export type RoleArtifact =
+  | { kind: 'email'; content: EmailArtifactContent }
+  | { kind: 'ticket'; content: TicketArtifactContent }
+
 export type ScenarioContent = {
   id: string
   title: string
@@ -71,6 +75,33 @@ export type ParticipantRecord = {
   name: string
   role: RoleContent['label']
   status: ConnectionState
+}
+
+export type ParticipantSnapshot = {
+  roomCode: string
+  participantName: string
+  maxParticipants: number
+  connection: ConnectionState
+  role: RoleContent
+  lobby: LobbySnapshot
+  round: RoundContent
+  artifact: RoleArtifact
+  departmentDecisions: Record<RoleId, string>
+  metricDeltas: MetricDelta[]
+}
+
+export type FacilitatorSnapshot = {
+  roomCode: string
+  joinUrl: string
+  maxParticipants: number
+  participants: ParticipantRecord[]
+  lobby: LobbySnapshot
+  vote: VoteSnapshot
+  round: RoundContent
+  departmentDecisions: Record<RoleId, string>
+  metricDeltas: MetricDelta[]
+  privateRoundNote: string
+  scenarioTitle: string
 }
 
 export type RoleCounts = {
