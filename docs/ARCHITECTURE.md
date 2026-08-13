@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the intended future application. It is not implemented yet.
+This document describes the version 1 local demo architecture.
 
 ## Principles
 
@@ -11,7 +11,7 @@ This document describes the intended future application. It is not implemented y
 - Filter role-private information on the server.
 - Avoid databases, distributed systems, runtime AI, and unnecessary frameworks in version 1.
 
-## Intended Stack
+## Stack
 
 Frontend:
 
@@ -45,7 +45,7 @@ Facilitator laptop ---- HTTP + WebSocket ---- Session manager
                                             Scenario loader
                                             WebSocket manager
                                             Security validation
-                                            React static build
+                                            React/Vite frontend
 ```
 
 ## Server Authority

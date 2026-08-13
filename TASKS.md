@@ -99,7 +99,7 @@ Codex note: do not remind the project owner to run Phase 2 unless they explicitl
 ## Phase 14 - Polish / Testing
 
 - [ ] Run 2, 6, and 9 participant rehearsals.
-- [ ] Prepare portfolio-safe README, screenshots, and architecture diagram.
+- [x] Prepare portfolio-safe README, screenshots, and architecture diagram.
 
 ## Later / Not Version 1
 

@@ -2,7 +2,7 @@
 
 Incident Bridge is a concept demonstration for a facilitator-led, multiplayer cybersecurity tabletop exercise. Participants use their phones to join a temporary room, choose a department role, receive role-specific information, vote on decisions during a fictional incident, and review the organisational consequences with a facilitator.
 
-Current status: local concept demo. The repository contains validated scenario content, a React/TypeScript/Vite frontend, and a FastAPI backend with in-memory live sessions, role selection, voting, round progression, reconnection, and debrief support.
+Current status: local concept demo. The repository contains validated scenario content, a React/TypeScript/Vite frontend, and a FastAPI backend with in-memory live sessions, QR joining, role selection, voting, round progression, reconnection, and debrief support.
 
 ## Why It Exists
 
@@ -18,9 +18,21 @@ Traditional awareness presentations can explain good practice, but they rarely l
 - Standard mode uses 5 rounds.
 - The facilitator controls all progression.
 
+## Screenshots
+
+These screenshots use fictional scenario content and local demo screens only.
+
+![Facilitator create room](docs/screenshots/facilitator-create.png)
+
+![Facilitator lobby](docs/screenshots/facilitator-lobby.png)
+
+![Participant round](docs/screenshots/participant-round.png)
+
+![Facilitator debrief](docs/screenshots/facilitator-debrief.png)
+
 ## Architecture Direction
 
-The later application is intended to use:
+The application uses:
 
 - React, TypeScript, Vite, React Router, and organised CSS or CSS Modules.
 - FastAPI, Pydantic, native FastAPI WebSockets, and Pytest.
@@ -29,6 +41,20 @@ The later application is intended to use:
 - One authoritative server that controls state, votes, permissions, private role visibility, metrics, and consequences.
 
 No database, user accounts, chat, runtime AI, complex admin system, or multi-service infrastructure is planned for version 1.
+
+```mermaid
+flowchart LR
+    participant["Participant phones"] --> frontend["React/Vite frontend"]
+    facilitator["Facilitator laptop"] --> frontend
+    frontend -->|"HTTP requests and WebSocket subscriptions"| api["FastAPI backend"]
+    api --> sessions["In-memory session manager"]
+    sessions --> engine["Authoritative game engine"]
+    engine --> scenario["Validated Friday Pay Run scenario JSON"]
+    sessions --> snapshots["Role-filtered snapshots"]
+    snapshots --> frontend
+```
+
+More detail is available in [docs/ARCHITECTURE_DIAGRAM.md](docs/ARCHITECTURE_DIAGRAM.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Privacy Principles
 
@@ -40,8 +66,10 @@ No database, user accounts, chat, runtime AI, complex admin system, or multi-ser
 ## Project Structure
 
 ```text
-backend/    FastAPI/Pydantic backend skeleton, scenario models, and Python tests
+backend/    FastAPI/Pydantic API, scenario models, session engine, and Python tests
 docs/       Source-of-truth product, game, protocol, architecture, threat, and constraint docs
+docs/screenshots/
+            Portfolio-safe local demo screenshots
 design/     UX flow, wireframe, and design direction docs
 frontend/   React/TypeScript/Vite prototype frontend and frontend tests
 scenarios/  Human-readable draft scenario source
@@ -68,6 +96,7 @@ make frontend-dev
 
 For phone testing or rehearsal across devices, see `docs/DEMO_ROUTE.md`. Localhost URLs work only
 on the facilitator laptop; participant phones need a tunnel URL or the laptop's LAN IP.
+For the 2, 6, and 9 participant test runs, see `docs/REHEARSAL_PLAN.md`.
 
 Run validation, tests, linting, and formatting:
 
