@@ -94,8 +94,9 @@ make backend-dev
 make frontend-dev
 ```
 
-For phone testing or rehearsal across devices, see `docs/DEMO_ROUTE.md`. Localhost URLs work only
-on the facilitator laptop; participant phones need a tunnel URL or the laptop's LAN IP.
+For phone testing or rehearsal across devices, start with `docs/DEMO_QUICK_START.md`, then see
+`docs/DEMO_ROUTE.md` for extra context. Localhost URLs work only on the facilitator laptop;
+participant phones need a tunnel URL or the laptop's LAN IP.
 For the 2, 6, and 9 participant test runs, see `docs/REHEARSAL_PLAN.md`.
 
 Run validation, tests, linting, and formatting:
