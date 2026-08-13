@@ -8,7 +8,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url))
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['.ngrok-free.dev'],
+    allowedHosts: ['.ngrok-free.dev', '.trycloudflare.com'],
     fs: {
       allow: [repoRoot],
     },
